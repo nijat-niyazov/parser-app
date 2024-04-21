@@ -1,4 +1,4 @@
-import { baseURL } from "@/utils/constatns/configs";
+import { baseURL } from "@/utils/constants/configs";
 
 function generatUrl(endPoint: string, params?: any) {
   const queryString = new URLSearchParams(params).toString();

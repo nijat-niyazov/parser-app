@@ -1,14 +1,15 @@
+import { Download } from "lucide-react";
 import { FormEvent } from "react";
 
 const DownloadFile = () => {
   async function submitDownloadFile(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    // const data = await downloadFle()
   }
+
   return (
     <form onSubmit={submitDownloadFile}>
-      <button className="bg-green-400 w-40 text-center p-2  rounded-md text-white font-semibold my-3">
-        Download Data
+      <button className="bg-green-400 flex items-center gap-2 text-center p-4 py-2  rounded-md text-white font-semibold my-3">
+        Download <Download />
       </button>
     </form>
   );

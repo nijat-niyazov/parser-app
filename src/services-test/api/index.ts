@@ -1,4 +1,4 @@
-import { baseURL } from "@/utils/constatns/configs";
+import { baseURL } from "@/utils/constants/configs";
 
 function generatUrl(endPoint: string, params?: any) {
   const queryString = new URLSearchParams(params).toString();
@@ -7,22 +7,21 @@ function generatUrl(endPoint: string, params?: any) {
 }
 
 export const fetchData = async (url: string, params: any) => {
-  const mainURL = generatUrl(url, params);
+  // const fullURL = generatUrl(url);
+  const fullURL = `/data/report.json`;
 
-  console.log({ mainURL });
-
-  const fullURL = url;
   const headers = { "Content-Type": "application/json" };
 
   try {
     const response = await fetch(fullURL, {
       method: "GET",
       headers,
+      // body: JSON.stringify(params),
     });
 
     const data = await response.json();
 
-    return { status: data?.code, ...data };
+    return data;
   } catch (error) {
     console.log(error);
 

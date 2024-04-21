@@ -1,8 +1,8 @@
 import { createData, fetchData } from ".";
 
 export const endpoints = {
-  scrapper: "aj",
-  reports: "data/report.json",
+  scrapper: "",
+  reports: "reports/list",
   formula: "data/formula.json",
   file: "data/report-generate.json",
 };

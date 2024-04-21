@@ -1,7 +1,6 @@
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -9,11 +8,11 @@ import {
 } from "@/components/ui/pagination";
 import { useSearchParams } from "react-router-dom";
 
-const TablePagination = () => {
+const TablePagination = ({ totalPages }: { totalPages: number }) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const activePage = searchParams.get("offset")
-    ? parseInt(searchParams.get("offset"))
+  const activePage = searchParams.has("offset")
+    ? parseInt(searchParams.get("offset") as string)
     : 1;
 
   function onClick(pageIndex: number | string) {
@@ -29,38 +28,24 @@ const TablePagination = () => {
   }
 
   return (
-    <Pagination>
+    <Pagination className="mt-10">
       <PaginationContent>
         <PaginationItem>
           <PaginationPrevious onClick={() => onClick("prev")} />
         </PaginationItem>
-        <PaginationItem>
+        {Array.from({ length: totalPages }).map((_, pageNum) => (
           <PaginationLink
-            onClick={() => onClick(1)}
-            isActive={activePage === 1}
+            key={pageNum + 1}
+            onClick={() => onClick(pageNum + 1)}
+            isActive={activePage === pageNum + 1}
           >
-            1
+            {pageNum + 1}
           </PaginationLink>
-        </PaginationItem>
-        <PaginationItem>
-          <PaginationLink
-            onClick={() => onClick(2)}
-            isActive={activePage === 2}
-          >
-            2
-          </PaginationLink>
-        </PaginationItem>
-        <PaginationItem>
-          <PaginationLink
-            onClick={() => onClick(3)}
-            isActive={activePage === 3}
-          >
-            3
-          </PaginationLink>
-        </PaginationItem>
-        <PaginationItem>
+        ))}
+
+        {/* <PaginationItem>
           <PaginationEllipsis />
-        </PaginationItem>
+        </PaginationItem> */}
         <PaginationItem>
           <PaginationNext onClick={() => onClick("next")} />
         </PaginationItem>

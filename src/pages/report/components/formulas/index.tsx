@@ -7,13 +7,12 @@ import {
 } from "@/components/ui/dialog";
 import { createFormula, getFormulaList } from "@/services-test/api/endpoints";
 import { useQuery } from "@tanstack/react-query";
-import { Delete, Pencil } from "lucide-react";
 import { ChangeEvent, FormEvent, useState } from "react";
 
 const Formulas = () => {
   const { isPending, error, data } = useQuery({
     queryKey: ["formulas"],
-    queryFn: () => getFormulaList(),
+    queryFn: getFormulaList,
   });
   const [name, setName] = useState("");
   const [formula, setFormula] = useState("");
@@ -82,7 +81,7 @@ const Formulas = () => {
           </button>
         </form>
 
-        <ul className="my-3 grid gap-3">
+        {/* <ul className="my-3 grid gap-3">
           {data?.data?.map(
             (formula: { name: string; formula: string }, i: number) => {
               return (
@@ -103,7 +102,7 @@ const Formulas = () => {
               );
             }
           )}
-        </ul>
+        </ul> */}
       </DialogContent>
     </Dialog>
   );
