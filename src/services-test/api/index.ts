@@ -8,14 +8,42 @@ function generatUrl(endPoint: string, params?: any) {
 
 export const fetchData = async (url: string, params: any) => {
   // const fullURL = generatUrl(url);
+  // const fullURL = `https://jsonplaceholder.typicode.com/posts`;
   const fullURL = `/data/report.json`;
 
   const headers = { "Content-Type": "application/json" };
+  // const body = JSON.stringify({
+  //   search: [
+  //     {
+  //       key: "color",
+  //       operation: "EQUALS",
+  //       value: "red",
+  //     },
+  //     {
+  //       key: "size",
+  //       operation: "EQUALS",
+  //       value: "M",
+  //     },
+  //   ],
+  //   offset: 1,
+  //   limit: 10,
+  //   orderColumn: 1,
+  //   orderDirection: "DESC",
+  //   timezone: "+04:00",
+  //   fromDate: "2023-02-01",
+  //   toDate: "2024-03-11",
+  // });
+
+  const my = JSON.stringify(params);
+  const parsed = JSON.parse(my);
+
+  console.log(params, "\n", my, "\n", parsed);
 
   try {
     const response = await fetch(fullURL, {
       method: "GET",
       headers,
+
       // body: JSON.stringify(params),
     });
 

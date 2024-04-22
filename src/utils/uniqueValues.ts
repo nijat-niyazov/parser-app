@@ -1,11 +1,11 @@
-function uniqueValues(values: string[]) {
-  const items: string[] = [];
+function getUniqueValues(values: (string | null | number)[]) {
+  const items: (string | number)[] = [];
   for (const value of values) {
-    if (!items.includes(value.trim())) {
-      items.push(value.trim());
+    if (value && !items.includes(value)) {
+      items.push(value);
     }
   }
   return items;
 }
 
-export default uniqueValues;
+export default getUniqueValues;

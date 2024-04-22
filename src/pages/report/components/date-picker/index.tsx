@@ -1,4 +1,4 @@
-import { addDays, format } from "date-fns";
+import { format, subDays } from "date-fns";
 import { DateRange } from "react-day-picker";
 
 import { Button } from "@/components/ui/button";
@@ -16,9 +16,11 @@ function DatePickerWithRange({
   className,
 }: React.HTMLAttributes<HTMLDivElement>) {
   const [date, setDate] = useState<DateRange | undefined>({
-    from: new Date(2022, 0, 20),
-    to: addDays(new Date(2022, 0, 20), 20),
+    from: subDays(new Date(), 30),
+    to: new Date(),
   });
+
+  // console.log(date);
 
   return (
     <div className={cn("grid gap-2", className)}>
