@@ -4,7 +4,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { ChangeEvent, useState } from "react";
 
 import TH from "@/components/table-head";
-import { cn } from "@/utils";
+import { cn, generateParams } from "@/utils";
 import { useSearchParams } from "react-router-dom";
 import { TablePagination } from "./components";
 import TableActions from "./sections/table-actions";
@@ -33,71 +33,28 @@ export type SearchQuery = { key: string; operation: string; value: string | numb
 const ReportPage = () => {
   const [searchParams, setSearchParams] = useSearchParams(defaultParams);
 
-  const searchedItems = searchParams.get("search") ? JSON.parse(searchParams.get("search") as string) : [];
+  const searchedItems = searchParams.has("search") ? JSON.parse(searchParams.get("search") as string) : [];
+  const [searchedFields, setSearchedFields] = useState<SearchQuery[]>(searchedItems);
+  const addNewQuery = (items: SearchQuery[]) => setSearchedFields(items);
 
-  const [changed, setChanged] = useState<SearchQuery[]>(searchedItems);
-
-  function addNewQuery(items: SearchQuery[]) {
-    setChanged(items);
-  }
-
-  // const params2 = Object.assign(Object.fromEntries(searchParams.entries()), { search: searchedItems });
-  const params2 = Object.fromEntries(searchParams.entries());
-
-  const parames = {
-    search: [
-      {
-        key: "brandName",
-        operation: "Equals",
-        value: "bershka",
-      },
-    ],
-  };
-
-  // const queryParams = JSON.stringify(parames);
-  // const test = queryString.parse("foo={'name':1},{'name':2},{'name':3}", { arrayFormat: "comma" });
-  const myParams = JSON.stringify(params2);
-
-  // console.log("queryParams", queryParams, "\n", "myParams", myParams, "\n", "test", test);
-  console.log(
-    "params2",
-    params2,
-    "\n",
-    "myParams",
-    myParams,
-    "\n",
-    "Myparsed",
-    JSON.parse(JSON.stringify(myParams)),
-    "\n",
-    "parsed",
-    JSON.parse(JSON.stringify(parames))
-  );
-
-  // const str =
-  //   '{"limit":"50","search":"[{\\"key\\":\\"brandName\\",\\"operation\\":\\"Equals\\",\\"value\\":\\"bershla\\"}]"}';
-  //  JSON.parse(str),
-
-  // console.log(parames.search, "\n", params2, "\n", );
-  // console.log(JSON.parse(queryParams).search, );
+  const params = Object.fromEntries(searchParams.entries());
 
   const { isPending, error, data, isPlaceholderData, isFetching } = useQuery<ComingData>({
     queryKey: ["repoData", searchParams.toString()],
     queryFn: async () => {
       await new Promise((resolve) => setTimeout(resolve, 3000));
-      return await getReportData(params2);
+      return await getReportData(generateParams(params));
     },
     placeholderData: keepPreviousData,
   });
 
   // const [isEditMote, setIsEditMote] = useState<boolean>(false);
-  const [selecteds, setSelecteds] = useState<string[]>([]);
+  const [editableSelecteds, setEditableSelecteds] = useState<string[]>([]);
 
   function onChange(e: ChangeEvent<HTMLInputElement>) {
     const { name, value, checked } = e.target;
-
-    const selectedOptions = checked ? [...selecteds, value] : selecteds.filter((item) => item !== value);
-
-    setSelecteds(selectedOptions);
+    const selectedOptions = checked ? [...editableSelecteds, value] : editableSelecteds.filter((item) => item !== value);
+    setEditableSelecteds(selectedOptions);
   }
 
   const loading = isPending && isFetching;
@@ -106,12 +63,14 @@ const ReportPage = () => {
   }
 
   if (error) {
+    console.log(error);
+
     return <div>Error</div>;
   }
 
-  const editDisabled = !selecteds.length;
-  const deleteDisabled = !selecteds.length;
-  const savedDisabled = !selecteds.length;
+  const editDisabled = !editableSelecteds.length;
+  const deleteDisabled = !editableSelecteds.length;
+  const savedDisabled = !editableSelecteds.length;
 
   return (
     <div className="p-10  bg-slate-200 min-h-screen">
@@ -132,13 +91,13 @@ const ReportPage = () => {
                 // id="all"
                 value="all"
                 onChange={onChange}
-                checked={selecteds.includes("all")}
+                checked={editableSelecteds.includes("all")}
                 type="checkbox"
                 className="w-5 h-5 "
               />
             </TableHead>
             {headers.map((label, i) => (
-              <TH changed={changed} addNewQuery={addNewQuery} key={i} data={data?.data as PropertyType[]} label={label} />
+              <TH searchedFields={searchedFields} addNewQuery={addNewQuery} key={i} data={data?.data as PropertyType[]} label={label} />
             ))}
           </TableRow>
         </TableHeader>
@@ -150,7 +109,7 @@ const ReportPage = () => {
                   // name={`${property.id}`}
                   // id={`${property.id}`}
                   onChange={onChange}
-                  checked={selecteds.includes("all")}
+                  checked={editableSelecteds.includes("all")}
                   type="checkbox"
                   className="w-5 h-5"
                 />

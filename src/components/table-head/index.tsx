@@ -12,11 +12,11 @@ import { TableHead } from "../ui/table";
 type Props = {
   data: PropertyType[];
   label: { label: string; queryParam: string };
-  changed: SearchQuery[];
+  searchedFields: SearchQuery[];
   addNewQuery: (items: SearchQuery[]) => void;
 };
 
-const TH = ({ data, label, addNewQuery, changed }: Props) => {
+const TH = ({ data, label, addNewQuery, searchedFields }: Props) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [operation, setOperation] = useState({ index: 0, name: "Equals" });
 
@@ -34,23 +34,18 @@ const TH = ({ data, label, addNewQuery, changed }: Props) => {
       value: debounced,
     };
 
-    const alreadyAdded = changed.some((queryObj) => queryObj.key === newQuery.key);
+    const alreadyAdded = searchedFields.some((queryObj) => queryObj.key === newQuery.key);
 
     const items = debounced
       ? alreadyAdded
-        ? changed.map((queryObj) => (queryObj.key === label.queryParam ? newQuery : queryObj))
-        : [...changed, newQuery]
-      : changed.filter((queryObj) => queryObj.key !== newQuery.key);
+        ? searchedFields.map((queryObj) => (queryObj.key === label.queryParam ? newQuery : queryObj))
+        : [...searchedFields, newQuery]
+      : searchedFields.filter((queryObj) => queryObj.key !== newQuery.key);
 
     addNewQuery(items);
 
     if (items.length) {
-      // console.log(items);
-      const searchJSON = JSON.stringify(items);
-
-      // console.log(searchJSON);
-
-      searchParams.set("search", searchJSON);
+      searchParams.set("search", JSON.stringify(items));
     } else {
       searchParams.delete("search");
     }

@@ -35,9 +35,6 @@ export const fetchData = async (url: string, params: any) => {
   // });
 
   const my = JSON.stringify(params);
-  const parsed = JSON.parse(my);
-
-  console.log(params, "\n", my, "\n", parsed);
 
   try {
     const response = await fetch(fullURL, {
