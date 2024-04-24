@@ -1,4 +1,4 @@
-import { baseURL } from "@/utils/constants/configs";
+import { baseURL } from '@/utils/constants/configs';
 
 function generatUrl(endPoint: string, params?: any) {
   const queryString = new URLSearchParams(params).toString();
@@ -6,115 +6,100 @@ function generatUrl(endPoint: string, params?: any) {
   return `${baseURL}/${endPoint}?${queryString}`;
 }
 
-export const fetchData = async (url: string, params: any) => {
-  // const fullURL = generatUrl(url);
-  // const fullURL = `https://jsonplaceholder.typicode.com/posts`;
-  const fullURL = `/data/report.json`;
+export const fetchData = async <T>(url: string, params: any): Promise<{ status: number; data: T }> => {
+  const fullURL = generatUrl(url);
 
-  const headers = { "Content-Type": "application/json" };
-  // const body = JSON.stringify({
-  //   search: [
-  //     {
-  //       key: "color",
-  //       operation: "EQUALS",
-  //       value: "red",
-  //     },
-  //     {
-  //       key: "size",
-  //       operation: "EQUALS",
-  //       value: "M",
-  //     },
-  //   ],
-  //   offset: 1,
-  //   limit: 10,
-  //   orderColumn: 1,
-  //   orderDirection: "DESC",
-  //   timezone: "+04:00",
-  //   fromDate: "2023-02-01",
-  //   toDate: "2024-03-11",
-  // });
+  const headers = {
+    'Content-Type': 'application/json',
+    // 'Transfer-Encoding': 'chunked',
+    // Date: 'Wed, 24 Apr 2024 20:35:57 GMT',
+    // 'Keep-Alive': 'timeout=60',
+    // Connection: 'keep-alive',
+  };
 
-  const my = JSON.stringify(params);
+  console.log(fullURL);
 
   try {
     const response = await fetch(fullURL, {
-      method: "GET",
+      method: 'GET',
       headers,
-
-      // body: JSON.stringify(params),
     });
 
-    const data = await response.json();
+    const data: T = await response.json();
+    const status = response.status;
 
-    return data;
+    return { data, status };
   } catch (error) {
     console.log(error);
 
-    return error;
+    return error as any;
   }
 };
 
-export const createData = async (url: string, payload: any) => {
+export const createData = async <T>(url: string, payload: any): Promise<{ data: T; status: number }> => {
   const fullURL = generatUrl(url);
 
-  const headers = { "Content-Type": "application/json" };
+  const headers = { 'Content-Type': 'application/json' };
+
+  const body = JSON.stringify(payload);
 
   try {
     const response = await fetch(fullURL, {
-      method: "POST",
+      method: 'POST',
       headers,
       body: JSON.stringify(payload),
     });
 
-    console.log({ response });
+    const data: T = await response.json();
+    const status = response.status;
 
-    const data = await response.json();
-    console.log({ data });
-
-    return { data, status: response.status };
+    return { data, status };
   } catch (error) {
     console.log(error);
-    return error;
+    return error as any;
   }
 };
 
-export const updateData = async (url: string, payload: any) => {
+export const updateData = async <T>(url: string, payload: any): Promise<{ data: T; status: number }> => {
   const fullURL = generatUrl(url);
 
-  const headers = { "Content-Type": "application/json" };
+  const headers = { 'Content-Type': 'application/json' };
 
   try {
     const response = await fetch(fullURL, {
-      method: "PUT",
+      method: 'PUT',
       headers,
       body: JSON.stringify(payload),
     });
 
-    const data = await response.json();
+    const data: T = await response.json();
+    const status = response.status;
 
-    return data;
+    return { data, status };
   } catch (error) {
     console.log(error);
-    return error;
+    return error as any;
   }
 };
 
-export const deleteData = async (url: string, params: any) => {
-  const fullURL = generatUrl(url, params);
+export const deleteData = async <T>(url: string, payload: any): Promise<{ data: T; status: number }> => {
+  const fullURL = generatUrl(url);
 
-  const headers = { "Content-Type": "application/json" };
+  const headers = { 'Content-Type': 'application/json' };
 
   try {
     const response = await fetch(fullURL, {
-      method: "DELETE",
+      method: 'DELETE',
       headers,
+      body: JSON.stringify(payload),
     });
 
-    const data = await response.json();
+    const data: T = await response.json();
+    const status = response.status;
 
-    return data;
+    return { data, status };
   } catch (error) {
     console.log(error);
-    return error;
+    return error as any;
   }
 };

@@ -1,9 +1,9 @@
-import { DownloadFile, Formulas } from "../../components";
+import { DownloadFile } from '../../components';
 
 const TopSection = () => {
   return (
     <section className="flex items-center gap-4">
-      <Formulas />
+      {/* <Formulas /> */}
       <DownloadFile />
     </section>
   );

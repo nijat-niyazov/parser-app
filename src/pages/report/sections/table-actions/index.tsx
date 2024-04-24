@@ -1,12 +1,8 @@
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 
-import { Check, Pencil, SquareFunction, Trash2 } from "lucide-react";
-import { DatePickerWithRange, SelectShownCount } from "../../components";
+import { Check, ListRestart, Pencil, SquareFunction, Trash2 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { DatePickerWithRange, SelectShownCount } from '../../components';
 
 type Props = {
   disabledButtons: {
@@ -17,6 +13,12 @@ type Props = {
 };
 
 const TableActions = ({ disabledButtons }: Props) => {
+  const [searchParams, setSerachParams] = useSearchParams();
+
+  function resetFilters() {
+    setSerachParams({});
+  }
+
   return (
     <section className="flex items-center justify-end gap-4 bg-slate-800 p-2 rounded-t-lg">
       <DatePickerWithRange />
@@ -33,23 +35,17 @@ const TableActions = ({ disabledButtons }: Props) => {
       </Select>
 
       <SelectShownCount />
-      <button
-        disabled={disabledButtons.editDisabled}
-        className="bg-gray-600 p-2 rounded-md disabled:opacity-50"
-      >
+      <button disabled={disabledButtons.editDisabled} className="bg-gray-600 p-2 rounded-md disabled:opacity-50">
         <Pencil className="text-white " />
       </button>
-      <button
-        disabled={disabledButtons.deleteDisabled}
-        className="bg-gray-600 p-2 rounded-md disabled:opacity-50"
-      >
+      <button disabled={disabledButtons.deleteDisabled} className="bg-gray-600 p-2 rounded-md disabled:opacity-50">
         <Trash2 className="text-white " />
       </button>
-      <button
-        disabled={disabledButtons.editDisabled}
-        className="bg-gray-600 p-2 rounded-md disabled:opacity-50"
-      >
+      <button disabled={disabledButtons.editDisabled} className="bg-gray-600 p-2 rounded-md disabled:opacity-50">
         <Check className="text-white " />
+      </button>
+      <button onClick={resetFilters} disabled={!searchParams.toString()} className="bg-gray-600 p-2 rounded-md disabled:opacity-50">
+        <ListRestart className="text-white " />
       </button>
     </section>
   );
