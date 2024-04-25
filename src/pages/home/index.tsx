@@ -1,4 +1,4 @@
-import AddLink from "@/components/AddLink";
+import AddLink from '@/pages/home/AddLink';
 
 const HomePage = () => {
   return <AddLink />;

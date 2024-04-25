@@ -5,25 +5,16 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination";
-import { useSearchParams } from "react-router-dom";
+} from '@/components/ui/pagination';
+import { useSearchParams } from 'react-router-dom';
 
 const TablePagination = ({ totalPages }: { totalPages: number }) => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const activePage = searchParams.has('offset') ? parseInt(searchParams.get('offset') as string) : 1;
 
-  const activePage = searchParams.has("offset")
-    ? parseInt(searchParams.get("offset") as string)
-    : 1;
-
-  function onClick(pageIndex: number | string) {
-    let pageNum =
-      pageIndex === "prev"
-        ? activePage - 1
-        : pageIndex === "next"
-        ? activePage + 1
-        : pageIndex;
-
-    searchParams.set("offset", pageNum.toString());
+  function onChangePageNumber(pageIndex: number | string) {
+    let pageNum = pageIndex === 'prev' ? activePage - 1 : pageIndex === 'next' ? activePage + 1 : (pageIndex as number);
+    pageNum > 1 ? searchParams.set('offset', pageNum.toString()) : searchParams.delete('offset');
     setSearchParams(searchParams);
   }
 
@@ -31,23 +22,25 @@ const TablePagination = ({ totalPages }: { totalPages: number }) => {
     <Pagination className="mt-10">
       <PaginationContent>
         <PaginationItem>
-          <PaginationPrevious onClick={() => onClick("prev")} />
+          <PaginationPrevious disabled={activePage === 1} onClick={() => onChangePageNumber('prev')} />
         </PaginationItem>
-        {Array.from({ length: totalPages }).map((_, pageNum) => (
-          <PaginationLink
-            key={pageNum + 1}
-            onClick={() => onClick(pageNum + 1)}
-            isActive={activePage === pageNum + 1}
-          >
-            {pageNum + 1}
-          </PaginationLink>
-        ))}
+        {Array.from({ length: totalPages }).map((_, pageNum) => {
+          const pageNumber = pageNum + 1;
+          return (
+            <PaginationLink
+              key={pageNumber}
+              onClick={() => onChangePageNumber(pageNumber)}
+              isActive={activePage === pageNumber}
+              disabled={activePage === pageNumber}
+              className="disabled:opacity-100 select-none"
+            >
+              {pageNumber}
+            </PaginationLink>
+          );
+        })}
 
-        {/* <PaginationItem>
-          <PaginationEllipsis />
-        </PaginationItem> */}
         <PaginationItem>
-          <PaginationNext onClick={() => onClick("next")} />
+          <PaginationNext disabled={activePage === totalPages} onClick={() => onChangePageNumber('next')} />
         </PaginationItem>
       </PaginationContent>
     </Pagination>

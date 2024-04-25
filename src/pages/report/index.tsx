@@ -1,11 +1,11 @@
-import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getReportData } from '@/services-test/api/endpoints';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChangeEvent, useState } from 'react';
 
-import TH from '@/components/table-head';
+import TH from '@/pages/report/components/table-head';
 import { cn, generateParams } from '@/utils';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { TablePagination } from './components';
 import TableActions from './sections/table-actions';
 import TopSection from './sections/top-section';
@@ -27,7 +27,7 @@ export type PropertyType = { [key: string]: string | number | null };
 export type SearchQuery = {
   key: string;
   operation: string;
-  value: string | number;
+  value: string;
 };
 
 const ReportPage = () => {
@@ -40,6 +40,7 @@ const ReportPage = () => {
   const addNewQuery = (items: SearchQuery[]) => setSearchedFields(items);
 
   const params = generateParams(Object.fromEntries(searchParams.entries()));
+
   const { isPending, error, data, isPlaceholderData, isFetching } = useQuery({
     queryKey: ['repoData', searchParams.toString()],
     queryFn: () => getReportData(params),
@@ -73,17 +74,16 @@ const ReportPage = () => {
     const totalPages = Math.ceil(data.data.total / data.data.limit);
     const editMote = editableSelecteds.length;
 
+    const items = data.data.data as PropertyType[];
+
     return (
       <div className="p-10  bg-slate-200 min-h-screen">
         <TopSection />
 
         <TableActions disabledButtons={{ editDisabled, deleteDisabled, savedDisabled }} />
 
-        <Table
-          className={cn('', {
-            'opacity-20  pointer-events-none': isPlaceholderData && isFetching,
-          })}
-        >
+        <Table className={cn('', { 'opacity-20  pointer-events-none': isPlaceholderData && isFetching })}>
+          {/* ------------------------------ Table Header ------------------------------ */}
           <TableHeader>
             <TableRow>
               <TableHead className="border-r-[0.5px] border-b-[0.5px] border-black">
@@ -98,49 +98,64 @@ const ReportPage = () => {
                 />
               </TableHead>
               {headers.map((header, i) => (
-                <TH
-                  key={i}
-                  searchedFields={searchedFields}
-                  addNewQuery={addNewQuery}
-                  data={data?.data.data as PropertyType[]}
-                  header={header}
-                />
+                <TH key={i} searchedFields={searchedFields} addNewQuery={addNewQuery} data={items} header={header} />
               ))}
             </TableRow>
           </TableHeader>
+
+          {/* ---------------------------------- Data ---------------------------------- */}
           <TableBody>
-            {data?.data.data.map((property) => (
-              <TableRow key={property.id}>
-                <TableCell className="font-medium w-auto whitespace-nowrap overflow-hidden border-r-[0.5px] border-b-[0.5px] border-black">
-                  <input
-                    // name={`${property.id}`}
-                    // id={`${property.id}`}
-                    onChange={onChange}
-                    checked={editableSelecteds.includes('all')}
-                    type="checkbox"
-                    className="w-5 h-5"
-                  />
+            {items.length ? (
+              items.map((property) => (
+                <TableRow key={property.id}>
+                  <TableCell className="font-medium overflow-hidden border-r-[0.5px] border-b-[0.5px] border-black">
+                    <input
+                      // name={`${property.id}`}
+                      // id={`${property.id}`}
+                      onChange={onChange}
+                      checked={editableSelecteds.includes('all')}
+                      type="checkbox"
+                      className="w-5 h-5"
+                    />
+                  </TableCell>
+                  {headers.map(({ queryParam }, i) => {
+                    const isLink = queryParam.includes('link');
+                    const value = property[queryParam] ?? '';
+                    return (
+                      <TableCell
+                        key={i}
+                        className="font-medium whitespace-nowrap overflow-hidden border-r-[0.5px] border-b-[0.5px] border-black"
+                        // max-w-96 break-words
+                      >
+                        {editMote ? (
+                          <input type="text" value={value} className="p-2 rounded-md border-2 broder-black" onChange={onChange} />
+                        ) : isLink ? (
+                          <Link to={value as string} target="_blank" className="text-blue-500">
+                            {value}
+                          </Link>
+                        ) : (
+                          <p>{value}</p>
+                        )}
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={headers.length + 1}
+                  className="font-medium overflow-hidden border-r-[0.5px] border-b-[0.5px] border-black"
+                >
+                  <p className="text-3xl  font-bold">Nothing is found for your filters</p>
                 </TableCell>
-                {headers.map(({ queryParam }, i) => {
-                  const value = property[queryParam] ?? '';
-                  return (
-                    <TableCell
-                      key={i}
-                      className="font-medium w-auto whitespace-nowrap overflow-hidden border-r-[0.5px] border-b-[0.5px] border-black"
-                    >
-                      {editMote ? <input type="text" value={value} className="p-2 rounded-md border-2 broder-black" /> : value}
-                    </TableCell>
-                  );
-                })}
               </TableRow>
-            ))}
+            )}
           </TableBody>
-          <TableFooter>
-            <TableRow></TableRow>
-          </TableFooter>
         </Table>
 
-        <TablePagination totalPages={totalPages} />
+        {/* ------------------------------- Pagination ------------------------------- */}
+        {totalPages != 0 && <TablePagination totalPages={totalPages} />}
       </div>
     );
   }

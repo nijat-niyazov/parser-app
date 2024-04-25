@@ -22,8 +22,6 @@ const Formulas = () => {
     return <div>Error</div>;
   }
 
-  console.log(comingData);
-
   function onChange(e: ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target;
     if (name === 'name') {

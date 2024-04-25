@@ -7,7 +7,7 @@ import { cn } from '@/utils';
 import getUniqueValues from '@/utils/uniqueValues';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { TableHead } from '../ui/table';
+import { TableHead } from '../../../../components/ui/table';
 
 type Props = {
   data: PropertyType[];
@@ -16,19 +16,29 @@ type Props = {
   addNewQuery: (items: SearchQuery[]) => void;
 };
 
+const comparisonOperations = [
+  { label: 'Equals', value: 'EQUALS' },
+  { label: 'Start with', value: 'START_WITH' },
+  { label: 'End  with', value: 'END  _WITH' },
+  { label: 'Contains', value: 'CONTAINS' },
+  { label: 'Greater Than', value: 'GREATER_THAN' },
+  { label: 'Less Than', value: 'LESS_THAN' },
+];
+
 const TH = ({ data, header, addNewQuery, searchedFields }: Props) => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [operation, setOperation] = useState({ index: 0, name: 'EQUALS' });
-  const defaultValue = searchedFields.find((queryObj) => queryObj.key === header.queryParam)?.value ?? '';
+  const activeField = searchedFields.find((queryObj) => queryObj.key === header.queryParam);
+  console.log(activeField);
 
-  const [query, setQuery] = useState<string>(`${defaultValue}`);
+  const [operation, setOperation] = useState(activeField?.operation ?? 'EQUALS');
 
+  const [query, setQuery] = useState<string>(activeField?.value ?? '');
   const debounced = useDebounce(query, 500);
 
   useEffect(() => {
-    const newQuery = { key: header.queryParam, operation: operation.name, value: debounced };
+    const newQuery = { key: header.queryParam, operation, value: debounced };
 
-    const alreadyAdded = searchedFields.some((queryObj) => queryObj.key === newQuery.key);
+    const alreadyAdded = searchedFields.some(({ key }) => key === newQuery.key);
 
     const items = debounced
       ? alreadyAdded
@@ -65,16 +75,16 @@ const TH = ({ data, header, addNewQuery, searchedFields }: Props) => {
               </div>
 
               <div className="grid grid-cols-3 gap-2">
-                {['Equals', 'Starts with', 'Ends with', 'Contains', 'Greater Than', 'Less Than'].map((operationLabel, i) => (
+                {comparisonOperations.map(({ label, value }, i) => (
                   <button
                     key={i}
                     disabled={!query}
-                    onClick={() => setOperation({ index: i, name: operationLabel })}
+                    onClick={() => setOperation(value)}
                     className={cn('flex-1 bg-gray-400 disabled:opacity-50', {
-                      'bg-green-400': operation.index === i,
+                      'bg-green-400': value === operation,
                     })}
                   >
-                    {operationLabel}
+                    {label}
                   </button>
                 ))}
               </div>
