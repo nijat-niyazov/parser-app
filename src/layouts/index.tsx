@@ -1,5 +1,6 @@
-import { Outlet } from "react-router-dom";
-import Header from "../components/Header";
+import { Toaster } from '@/components/ui/toaster';
+import { Outlet } from 'react-router-dom';
+import Header from '../components/Header';
 
 const MainLayout = () => {
   return (
@@ -7,7 +8,11 @@ const MainLayout = () => {
       <Header />
       {/* <h1>Yes</h1> */}
 
-      <Outlet />
+      <main className="flex-1">
+        <Outlet />
+      </main>
+
+      <Toaster />
     </div>
   );
 };

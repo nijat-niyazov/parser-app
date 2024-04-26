@@ -1,18 +1,23 @@
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 
-import { Check, ListRestart, Pencil, SquareFunction, Trash2 } from 'lucide-react';
+import { Check, ListRestart, Plus, SquareFunction, Trash2 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { DatePickerWithRange, SelectShownCount } from '../../components';
 
 type Props = {
   disabledButtons: {
-    editDisabled: boolean;
+    // editDisabled: boolean;
     deleteDisabled: boolean;
     savedDisabled: boolean;
   };
+  handleAddField: () => void;
+  handleSaveNewFields: () => void;
+  handleUpdate: () => void;
+  handleDelete: () => void;
+  saveMode: 'save' | 'update';
 };
 
-const TableActions = ({ disabledButtons }: Props) => {
+const TableActions = ({ disabledButtons, handleUpdate, handleDelete, handleAddField, handleSaveNewFields, saveMode }: Props) => {
   const [searchParams, setSerachParams] = useSearchParams();
 
   function resetFilters() {
@@ -35,13 +40,19 @@ const TableActions = ({ disabledButtons }: Props) => {
       </Select>
 
       <SelectShownCount />
-      <button disabled={disabledButtons.editDisabled} className="bg-gray-600 p-2 rounded-md disabled:opacity-50">
-        <Pencil className="text-white " />
+
+      <button onClick={handleAddField} className="bg-gray-600 p-2 rounded-md disabled:opacity-50">
+        <Plus className="text-white " />
       </button>
-      <button disabled={disabledButtons.deleteDisabled} className="bg-gray-600 p-2 rounded-md disabled:opacity-50">
+
+      <button onClick={handleDelete} disabled={disabledButtons.deleteDisabled} className="bg-gray-600 p-2 rounded-md disabled:opacity-50">
         <Trash2 className="text-white " />
       </button>
-      <button disabled={disabledButtons.editDisabled} className="bg-gray-600 p-2 rounded-md disabled:opacity-50">
+      <button
+        onClick={saveMode === 'save' ? handleSaveNewFields : handleUpdate}
+        disabled={disabledButtons.savedDisabled}
+        className="bg-gray-600 p-2 rounded-md disabled:opacity-50"
+      >
         <Check className="text-white " />
       </button>
       <button onClick={resetFilters} disabled={!searchParams.toString()} className="bg-gray-600 p-2 rounded-md disabled:opacity-50">

@@ -3,6 +3,10 @@ export const headers = [
   //   label: 'Create Date',
   //   queryParam: 'create_date',
   // },
+  // {
+  //   label: 'ID',
+  //   queryParam: 'id',
+  // },
   {
     label: 'Article ID',
     queryParam: 'article_id',

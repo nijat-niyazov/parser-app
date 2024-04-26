@@ -28,7 +28,6 @@ const comparisonOperations = [
 const TH = ({ data, header, addNewQuery, searchedFields }: Props) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeField = searchedFields.find((queryObj) => queryObj.key === header.queryParam);
-  console.log(activeField);
 
   const [operation, setOperation] = useState(activeField?.operation ?? 'EQUALS');
 

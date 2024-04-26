@@ -1,18 +1,18 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { createFormula, deleteFormula, getFormulaList, updateFormula } from '@/services-test/api/endpoints';
+import { useToast } from '@/components/ui/use-toast';
+import { FormulaType, createFormula, deleteFormula, getFormulaList } from '@/services-test/api/endpoints';
 import { useQuery } from '@tanstack/react-query';
 import { Delete, Pencil } from 'lucide-react';
 import { ChangeEvent, FormEvent, useState } from 'react';
 
-type DataType = { code: number; message: string };
-
+const initialSate = { name: '', formula: '' };
 const Formulas = () => {
   const { isPending, error, data: comingData } = useQuery({ queryKey: ['formulas'], queryFn: getFormulaList });
 
-  const [name, setName] = useState('');
-  const [formula, setFormula] = useState('');
-  const [editableId, setEditableId] = useState<number | null>(null);
-  const [formula2, setFormula2] = useState({ name: '', formula: '', id: null });
+  const [formula, setFormula] = useState<Omit<FormulaType, 'id'> & { id?: number }>(initialSate);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const { toast } = useToast();
 
   if (isPending) {
     return <div>Loading...</div>;
@@ -24,37 +24,36 @@ const Formulas = () => {
 
   function onChange(e: ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target;
-    if (name === 'name') {
-      setName(value);
-    } else {
-      setFormula(value);
-    }
-  }
 
-  // function handleChange(e: ChangeEvent<HTMLInputElement>) {
-  //   const { name, value } = e.target;
-  //   setFormula2((prev) => ({ ...prev, [name]: value }));
-  // }
+    setFormula((prev) => ({ ...prev, [name]: value }));
+  }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setIsLoading(true);
+    const { data } = await createFormula(formula);
 
-    const data = editableId ? await updateFormula({ name, formula, id: editableId }) : await createFormula({ name, formula });
-
-    setEditableId(null);
-  }
-
-  function handleUpdateFormula(formula: { name: string; formula: string; id: number }) {
-    setEditableId(formula.id);
-    setName(formula.name);
-    setFormula(formula.formula);
+    if (data.code === 200) {
+      toast({
+        title: `Changes implemented! ✔`,
+        description: `Your formula has been ${formula.id ? 'edited' : 'created'} !`,
+      });
+      setFormula(initialSate);
+      setIsLoading(false);
+    }
   }
 
   async function handleDeleteFormula(id: number) {
-    const data = await deleteFormula([id]);
+    alert('Are you sure you want to delete this formula?');
 
-    console.log(data);
+    const { data } = await deleteFormula([id]);
+
+    if (data.code === 200) {
+      toast({ title: `Formula is deleted! ⚠` });
+    }
   }
+
+  const formulaList = comingData.data.data;
 
   return (
     <Dialog>
@@ -69,11 +68,11 @@ const Formulas = () => {
           <label>
             <span>Name</span>
             <input
-              name="name"
               type="text"
-              value={formula2.name}
-              // onChange={handleChange}
+              name="name"
               className="p-2 block rounded-md border-black border-2 w-full focus:outline-none focus:border-blue-500"
+              value={formula.name}
+              onChange={onChange}
             />
           </label>
           <label>
@@ -81,26 +80,28 @@ const Formulas = () => {
             <input
               type="text"
               name="formula"
-              value={formula2.formula}
-              // handleChange={onChange}
               className="p-2 block rounded-md border-black border-2 w-full focus:outline-none focus:border-blue-500"
+              value={formula.formula}
+              onChange={onChange}
             />
           </label>
           <button
-            disabled={!name || !formula}
+            disabled={Object.values(formula).includes('') || isLoading}
             className="bg-green-600 p-2 w-full text-center rounded-lg font-bold text-white disabled:opacity-50"
             type="submit"
           >
-            {editableId ? 'Edit' : 'Submit'}
+            {isLoading ? <Spinner /> : formula.id ? 'Edit' : 'Submit'}
           </button>
         </form>
 
-        <ul className="my-3 grid gap-3">
-          {comingData.data.data.map((formula, i) => {
+        <ol className="my-3 grid gap-3">
+          {formulaList.map((formula, i) => {
             return (
-              <li key={i} className="bg-gray-200 p-2 rounded-md flex gap-2 ">
-                <span className="grow"> {formula.name}</span>
-                <button onClick={() => handleUpdateFormula(formula)}>
+              <li key={formula.id} className="bg-gray-200 p-2 rounded-md flex gap-2 ">
+                <span className="grow">
+                  {i}. {formula.name}
+                </span>
+                <button onClick={() => setFormula(formula as FormulaType)}>
                   <Pencil />
                 </button>
                 <button onClick={() => handleDeleteFormula(formula.id)}>
@@ -109,10 +110,14 @@ const Formulas = () => {
               </li>
             );
           })}
-        </ul>
+        </ol>
       </DialogContent>
     </Dialog>
   );
 };
 
 export default Formulas;
+
+function Spinner() {
+  return <div className="w-6 h-6 mx-auto rounded-full bg-transparent border-2 border-t-gray-400 border-black animate-spin" />;
+}

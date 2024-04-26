@@ -1,14 +1,8 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { generateLinks } from "@/services-test/api/endpoints";
-import { cn } from "@/utils";
-import { Pencil } from "lucide-react";
-import { ChangeEvent, FormEvent, useRef, useState } from "react";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { generateLinks } from '@/services-test/api/endpoints';
+import { cn } from '@/utils';
+import { Pencil } from 'lucide-react';
+import { ChangeEvent, FormEvent, useRef, useState } from 'react';
 
 type Item = {
   link: string;
@@ -17,7 +11,7 @@ type Item = {
 
 const AddLink = () => {
   const [links, setLinks] = useState<Item[]>([]);
-  const [link, setLink] = useState<string>("");
+  const [link, setLink] = useState<string>('');
   const [isChecking, setIsChecking] = useState<boolean>(false);
   const [success, setSuccess] = useState<boolean>(false);
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -34,12 +28,10 @@ const AddLink = () => {
       const newLink = { id: link.trim().length + 1, link };
       setLinks((prev) => [...prev, newLink]);
     } else {
-      setLinks((prev) =>
-        prev.map((item) => (item.id === editItem.id ? { ...item, link } : item))
-      );
+      setLinks((prev) => prev.map((item) => (item.id === editItem.id ? { ...item, link } : item)));
       setEditItem(null);
     }
-    setLink("");
+    setLink('');
     ref.current?.focus();
   }
 
@@ -60,7 +52,7 @@ const AddLink = () => {
     const res = (await generateLinks(onyLinks)) as any;
 
     if (res?.status === 201) {
-      setLink("");
+      setLink('');
       setLinks([]);
     } else {
       setSuccess(false);
@@ -75,36 +67,26 @@ const AddLink = () => {
   }
 
   return (
-    <div className="grow bg-main ">
+    <div className="bg-main ">
       {/* <div className="h-full w-full bg-main  brightness-50" /> */}
 
       <Dialog open={showModal} onOpenChange={handleChange}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>
-              {success
-                ? "Links succesfully sent ✔"
-                : "Something went wrong. Please try again"}{" "}
-            </DialogTitle>
+            <DialogTitle>{success ? 'Links succesfully sent ✔' : 'Something went wrong. Please try again'} </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4"></div>
           </div>
           <DialogFooter>
-            <button
-              onClick={handleChange}
-              className="px-4 py-2 rounded-lg text-xl bg-slate-500 text-white"
-            >
+            <button onClick={handleChange} className="px-4 py-2 rounded-lg text-xl bg-slate-500 text-white">
               Close
             </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       <div className="max-w-[600px] mx-auto z-10">
-        <form
-          onSubmit={onSubmit}
-          className="flex items-center justify-center gap-2 py-10 "
-        >
+        <form onSubmit={onSubmit} className="flex items-center justify-center gap-2 py-10 ">
           <input
             ref={ref}
             type="text"
@@ -125,9 +107,7 @@ const AddLink = () => {
           </button>
           <button
             type="submit"
-            disabled={
-              links.length === 0 || isChecking || link.trim().length !== 0
-            }
+            disabled={links.length === 0 || isChecking || link.trim().length !== 0}
             className="p-2 bg-green-400 rounded-lg font-semibold disabled:opacity-50"
           >
             Generate Links
@@ -139,21 +119,15 @@ const AddLink = () => {
             setLinks([]);
             setEditItem(null);
           }}
-          className={cn(
-            "my-10 w-full py-2 text-center bg-gray-500 rounded-lg text-white",
-            {
-              "opacity-0 pointer-events-none": !links.length,
-            }
-          )}
+          className={cn('my-10 w-full py-2 text-center bg-gray-500 rounded-lg text-white', {
+            'opacity-0 pointer-events-none': !links.length,
+          })}
         >
           Clear All
         </button>
         <ul className="grid gap-3">
           {links.map(({ link, id }, i) => (
-            <li
-              key={i}
-              className="flex items-center gap-2 px-2 py-1 rounded-full bg-gray-400 overflow-hidden"
-            >
+            <li key={i} className="flex items-center gap-2 px-2 py-1 rounded-full bg-gray-400 overflow-hidden">
               <p className="grow truncate ">{link}</p>
               <button onClick={() => removeFromList(id)}>❌</button>
               <button onClick={() => setEditMode({ link, id })}>
