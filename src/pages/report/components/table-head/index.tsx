@@ -4,26 +4,20 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import useDebounce from '@/hooks/useDebounce';
 import { PropertyType, SearchQuery } from '@/pages/report';
 import { cn } from '@/utils';
-import getUniqueValues from '@/utils/uniqueValues';
+import getUniqueValues from '@/utils/helpers/uniqueValues';
+import { Check } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { TableHead } from '../../../../components/ui/table';
+import { comparisonOperations } from './static';
 
 type Props = {
   data: PropertyType[];
   header: { label: string; queryParam: string };
   searchedFields: SearchQuery[];
   addNewQuery: (items: SearchQuery[]) => void;
+  handleFilter: (value: string) => void;
 };
-
-const comparisonOperations = [
-  { label: 'Equals', value: 'EQUALS' },
-  { label: 'Start with', value: 'START_WITH' },
-  { label: 'End  with', value: 'END  _WITH' },
-  { label: 'Contains', value: 'CONTAINS' },
-  { label: 'Greater Than', value: 'GREATER_THAN' },
-  { label: 'Less Than', value: 'LESS_THAN' },
-];
 
 const TH = ({ data, header, addNewQuery, searchedFields }: Props) => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -49,11 +43,20 @@ const TH = ({ data, header, addNewQuery, searchedFields }: Props) => {
 
     items.length ? searchParams.set('search', JSON.stringify(items)) : searchParams.delete('search');
 
-    setSearchParams(searchParams);
+    // setSearchParams(searchParams);
   }, [debounced, operation]);
 
   const uniqueValues = useMemo(() => getUniqueValues(data.map((item) => item[header.queryParam as keyof typeof item])), []);
   const filteredUniqeValues = useMemo(() => uniqueValues.filter((item) => item.toString().includes(query)), [query]);
+
+  const [rename, setRename] = useState('');
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    const data = { fieldName: header.queryParam, fieldValue: query, renameValue: rename };
+    console.log(data);
+  }
 
   return (
     <TableHead className="w-auto whitespace-nowrap overflow-hidden border-r-[0.5px] border-b-[0.5px] border-black text-black p-0">
@@ -79,9 +82,7 @@ const TH = ({ data, header, addNewQuery, searchedFields }: Props) => {
                     key={i}
                     disabled={!query}
                     onClick={() => setOperation(value)}
-                    className={cn('flex-1 bg-gray-400 disabled:opacity-50', {
-                      'bg-green-400': value === operation,
-                    })}
+                    className={cn('flex-1 bg-gray-400 disabled:opacity-50', { 'bg-green-400': value === operation })}
                   >
                     {label}
                   </button>
@@ -99,10 +100,13 @@ const TH = ({ data, header, addNewQuery, searchedFields }: Props) => {
                   className="col-span-2 h-8"
                 />
               </div>
-              <div className="grid grid-cols-3 items-center gap-4">
-                <Label htmlFor="replace">Replace</Label>
-                <Input id="replace" defaultValue="300px" className="col-span-2 h-8" />
-              </div>
+              <form onSubmit={handleSubmit} className="flex items-center gap-4">
+                <Label htmlFor="rename">Rename</Label>
+                <Input value={rename} onChange={(e) => setRename(e.target.value)} id="rename" className="flex-1" />
+                <button className="bg-green-300">
+                  <Check />
+                </button>
+              </form>
 
               <ul className="grid gap-2 ">
                 {filteredUniqeValues.map((item: string | number, i: number) => (

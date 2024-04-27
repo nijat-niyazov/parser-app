@@ -17,8 +17,6 @@ export const fetchData = async <T>(url: string, params: any): Promise<{ status: 
       headers,
     });
 
-    console.log(response);
-
     const data: T = await response.json();
     const status = response.status;
 

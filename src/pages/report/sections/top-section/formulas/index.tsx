@@ -1,26 +1,15 @@
+import { AreYouSureModal } from '@/components';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { FormulaType, createFormula, deleteFormula, getFormulaList } from '@/services-test/api/endpoints';
-import { useQuery } from '@tanstack/react-query';
-import { Delete, Pencil } from 'lucide-react';
+import { FormulaType, createFormula, deleteFormula } from '@/services/api/endpoints';
+import { Pencil } from 'lucide-react';
 import { ChangeEvent, FormEvent, useState } from 'react';
 
 const initialSate = { name: '', formula: '' };
-const Formulas = () => {
-  const { isPending, error, data: comingData } = useQuery({ queryKey: ['formulas'], queryFn: getFormulaList });
 
+const Formulas = ({ formulas: formulaList, refetchFormulas }: { formulas: FormulaType[]; refetchFormulas: any }) => {
   const [formula, setFormula] = useState<Omit<FormulaType, 'id'> & { id?: number }>(initialSate);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  const { toast } = useToast();
-
-  if (isPending) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div>Error</div>;
-  }
 
   function onChange(e: ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target;
@@ -28,32 +17,31 @@ const Formulas = () => {
     setFormula((prev) => ({ ...prev, [name]: value }));
   }
 
+  const { toast } = useToast();
+  /* -------------------------- Add & Update Formula -------------------------- */
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setIsLoading(true);
     const { data } = await createFormula(formula);
 
     if (data.code === 200) {
-      toast({
-        title: `Changes implemented! ✔`,
-        description: `Your formula has been ${formula.id ? 'edited' : 'created'} !`,
-      });
+      toast({ title: `Changes implemented! ✔`, description: `Your formula has been ${formula.id ? 'edited' : 'created'} !` });
+
+      refetchFormulas();
       setFormula(initialSate);
       setIsLoading(false);
     }
   }
 
+  /* ----------------------------- Delete Formula ----------------------------- */
   async function handleDeleteFormula(id: number) {
-    alert('Are you sure you want to delete this formula?');
-
     const { data } = await deleteFormula([id]);
 
     if (data.code === 200) {
       toast({ title: `Formula is deleted! ⚠` });
+      refetchFormulas();
     }
   }
-
-  const formulaList = comingData.data.data;
 
   return (
     <Dialog>
@@ -99,14 +87,16 @@ const Formulas = () => {
             return (
               <li key={formula.id} className="bg-gray-200 p-2 rounded-md flex gap-2 ">
                 <span className="grow">
-                  {i}. {formula.name}
+                  {i + 1}. {formula.name}
                 </span>
                 <button onClick={() => setFormula(formula as FormulaType)}>
                   <Pencil />
                 </button>
-                <button onClick={() => handleDeleteFormula(formula.id)}>
-                  <Delete />
-                </button>
+                <AreYouSureModal
+                  title="Are you sure?"
+                  description="This changes will be unrecoverable."
+                  handleDelete={() => handleDeleteFormula(formula.id)}
+                />
               </li>
             );
           })}

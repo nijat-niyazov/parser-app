@@ -2,7 +2,7 @@ import { PropertyType } from '@/pages/report';
 import { createData, deleteData, fetchData, updateData } from '.';
 
 export const endpoints = {
-  scrapper: '',
+  scrapper: 'scraper/fetch',
   reports_list: 'reports/list',
   reports: 'reports',
 
@@ -50,3 +50,6 @@ export const getFormulaList = () => fetchData<SuccessType & { data: FormulaType[
 export const createFormula = (data: Omit<FormulaType, 'id'> & { id?: number }) => createData<SuccessType>(endpoints.formula, data);
 
 export const deleteFormula = (data: number[]) => deleteData<SuccessType>(endpoints.formula, data);
+
+export const setFormulaToField = (data: { productIds: (number | string)[]; formulaId: string }) =>
+  updateData<SuccessType>(`${endpoints.reports}/${endpoints.formula}`, data);

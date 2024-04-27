@@ -1,13 +1,7 @@
-import DatePickerWithRange from "./date-picker";
-import DownloadFile from "./download";
-import Formulas from "./formulas";
-import TablePagination from "./pagination";
-import SelectShownCount from "./slider";
+import DatePickerWithRange from './date-picker';
+import NewField from './new-field';
 
-export {
-  DatePickerWithRange,
-  DownloadFile,
-  Formulas,
-  SelectShownCount,
-  TablePagination,
-};
+import TablePagination from './pagination';
+import SelectShownCount from './slider';
+
+export { DatePickerWithRange, NewField, SelectShownCount, TablePagination };

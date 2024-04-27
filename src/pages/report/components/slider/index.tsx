@@ -26,7 +26,7 @@ const SelectShownCount = ({ className, ...props }: SliderProps) => {
 
   return (
     <div className="flex gap-2 text-white">
-      <Slider value={[value]} onValueChange={changeCount} min={5} max={100} step={1} className={cn('w-80 ', className)} {...props} />
+      <Slider value={[value]} onValueChange={changeCount} min={5} max={100} step={1} className={cn('w-56 ', className)} {...props} />
       <p>Show {value}</p>
     </div>
   );

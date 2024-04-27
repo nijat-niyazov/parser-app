@@ -14,7 +14,8 @@ const TablePagination = ({ totalPages }: { totalPages: number }) => {
 
   function onChangePageNumber(pageIndex: number | string) {
     let pageNum = pageIndex === 'prev' ? activePage - 1 : pageIndex === 'next' ? activePage + 1 : (pageIndex as number);
-    pageNum > 1 ? searchParams.set('offset', pageNum.toString()) : searchParams.delete('offset');
+    // pageNum > 1 ? searchParams.set('offset', pageNum.toString()) : searchParams.delete('offset');
+    searchParams.set('offset', pageNum.toString());
     setSearchParams(searchParams);
   }
 

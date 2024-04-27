@@ -1,35 +1,31 @@
 export const headers = [
-  // {
-  //   label: 'Create Date',
-  //   queryParam: 'create_date',
-  // },
-  // {
-  //   label: 'ID',
-  //   queryParam: 'id',
-  // },
+  {
+    label: 'ID',
+    queryParam: 'id',
+  },
   {
     label: 'Article ID',
-    queryParam: 'article_id',
+    queryParam: 'articleId',
   },
   {
     label: 'Product Merge Id',
-    queryParam: 'product_merge_id',
+    queryParam: 'productMergeId',
   },
   {
     label: 'Brand Name',
-    queryParam: 'brand_name',
+    queryParam: 'brandName',
   },
   {
     label: 'Product Title',
-    queryParam: 'product_title',
+    queryParam: 'productTitle',
   },
   {
     label: 'Source Price',
-    queryParam: 'source_price',
+    queryParam: 'sourcePrice',
   },
   {
     label: 'Final Price',
-    queryParam: 'final_price',
+    queryParam: 'finalPrice',
   },
   {
     label: 'Color',
@@ -41,50 +37,50 @@ export const headers = [
   },
   {
     label: 'Before Discount Price',
-    queryParam: 'before_discount_price',
+    queryParam: 'beforeDiscountPrice',
   },
   {
     label: 'Product Size',
-    queryParam: 'product_size',
+    queryParam: 'productSize',
   },
   {
     label: 'Main Photo Link',
-    queryParam: 'main_photo_link',
+    queryParam: 'mainPhotoLink',
   },
   {
     label: 'Additional Photo Links',
-    queryParam: 'additional_photo_links',
+    queryParam: 'additionalPhotoLinks',
   },
   {
     label: 'Color From List',
-    queryParam: 'color_from_list',
+    queryParam: 'colorFromList',
   },
   {
     label: 'Origin Country',
-    queryParam: 'origin_country',
+    queryParam: 'originCountry',
   },
   {
     label: 'Material Name',
-    queryParam: 'material_name',
+    queryParam: 'materialName',
   },
   {
     label: 'Material Outer Shell',
-    queryParam: 'material_outer_shell',
+    queryParam: 'materialOuterShell',
   },
   {
     label: 'Material Liner Shell',
-    queryParam: 'material_liner_shell',
+    queryParam: 'materialLinerShell',
   },
   {
     label: 'Care Guide',
-    queryParam: 'care_guide',
+    queryParam: 'careGuide',
   },
   {
     label: 'In Stock',
-    queryParam: 'in_stock',
+    queryParam: 'inStock',
   },
   {
     label: 'Product Link',
-    queryParam: 'product_link',
+    queryParam: 'productLink',
   },
 ];

@@ -1,16 +1,12 @@
-import MainLayout from "@/layouts";
-import { HomePage, ReportPage } from "@/pages";
+import MainLayout from '@/layouts';
+import { HomePage, ReportPage } from '@/pages';
 
-import {
-  createBrowserRouter,
-  createRoutesFromElements,
-  Route,
-} from "react-router-dom";
+import { createBrowserRouter, createRoutesFromElements, Route } from 'react-router-dom';
 
 const routes = (
-  <Route path={"/"} element={<MainLayout />}>
+  <Route path={'/'} element={<MainLayout />}>
     <Route index element={<HomePage />} />
-    <Route path={"/report"} element={<ReportPage />} />
+    <Route path={'/report'} element={<ReportPage />} />
   </Route>
 );
 
