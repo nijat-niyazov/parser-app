@@ -12,10 +12,7 @@ export const fetchData = async <T>(url: string, params: any): Promise<{ status: 
   const fullURL = generatUrl(url, params);
 
   try {
-    const response = await fetch(fullURL, {
-      method: 'GET',
-      headers,
-    });
+    const response = await fetch(fullURL, { method: 'GET', headers });
 
     const data: T = await response.json();
     const status = response.status;
@@ -30,13 +27,13 @@ export const fetchData = async <T>(url: string, params: any): Promise<{ status: 
 
 export const createData = async <T>(url: string, payload: any): Promise<{ data: T; status: number }> => {
   const fullURL = generatUrl(url);
-
   const body = JSON.stringify(payload);
 
   try {
     const response = await fetch(fullURL, { method: 'POST', headers, body });
 
     const status = response.status;
+
     const data: T = status !== 202 && status !== 204 ? await response.json() : { code: status };
 
     return { data, status };

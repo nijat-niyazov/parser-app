@@ -8,22 +8,19 @@ type Props = {
   removeAddedField: (id: number) => void;
   handleChangeNewFields: (e: React.ChangeEvent<HTMLInputElement>) => void;
   field: PropertyType;
-  value: PropertyType;
+  property: PropertyType;
 };
-const NewField = ({ removeAddedField, handleChangeNewFields, field, value }: Props) => {
+const NewField = ({ removeAddedField, handleChangeNewFields, field, property }: Props) => {
   return (
     <TableRow>
       <TableCell className="font-medium overflow-hidden border-r-[0.5px] border-b-[0.5px] border-black">
-        <button onClick={() => removeAddedField(3)}>
+        <button onClick={() => removeAddedField(Number(field.id))}>
           <Trash2 />
         </button>
       </TableCell>
 
       {headers.map(({ queryParam }, index) => {
-        const id = field.id;
-        const propName = queryParam;
-
-        const inputValue = value?.[queryParam] ?? '';
+        const value = property[queryParam] ?? '';
 
         return (
           <TableCell key={index} className="font-medium whitespace-nowrap overflow-hidden border-r-[0.5px] border-b-[0.5px] border-black">
@@ -31,9 +28,9 @@ const NewField = ({ removeAddedField, handleChangeNewFields, field, value }: Pro
               autoFocus={index === 0}
               type="text"
               className="p-2 rounded-md border-2 broder-black min-w-40 w-full"
-              id={id.toString()}
-              name={propName}
-              value={inputValue}
+              id={field.id.toString()}
+              name={queryParam}
+              value={value}
               onChange={handleChangeNewFields}
             />
           </TableCell>

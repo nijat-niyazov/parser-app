@@ -36,9 +36,11 @@ const AreYouSureModal = ({
         </DialogHeader>
 
         <DialogFooter className="flex items-center gap-3">
-          <Button onClick={handleDelete} className="flex-1 bg-red-500">
-            Delete
-          </Button>
+          <DialogClose asChild>
+            <Button onClick={handleDelete} className="flex-1 bg-red-500">
+              Delete
+            </Button>
+          </DialogClose>
           <DialogClose asChild>
             <Button className="flex-1">Cancel</Button>
           </DialogClose>

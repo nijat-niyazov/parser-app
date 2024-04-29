@@ -1,8 +1,8 @@
 export const headers = [
-  {
-    label: 'ID',
-    queryParam: 'id',
-  },
+  // {
+  //   label: 'ID',
+  //   queryParam: 'id',
+  // },
   {
     label: 'Article ID',
     queryParam: 'articleId',

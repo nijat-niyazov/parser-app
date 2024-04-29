@@ -1,14 +1,17 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useToast } from '@/components/ui/use-toast';
 import useDebounce from '@/hooks/useDebounce';
 import { PropertyType, SearchQuery } from '@/pages/report';
+import { renameField } from '@/services/api/endpoints';
 import { cn } from '@/utils';
 import getUniqueValues from '@/utils/helpers/uniqueValues';
-import { Check } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { TableHead } from '../../../../components/ui/table';
+import { Spinner } from '../../sections/top-section/formulas';
 import { comparisonOperations } from './static';
 
 type Props = {
@@ -17,18 +20,35 @@ type Props = {
   searchedFields: SearchQuery[];
   addNewQuery: (items: SearchQuery[]) => void;
   handleFilter: (value: string) => void;
+  orderColumn: number;
 };
 
-const TH = ({ data, header, addNewQuery, searchedFields }: Props) => {
+const TH = ({ data, header, addNewQuery, searchedFields, orderColumn }: Props) => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const activeDirection = searchParams.get('orderDirection');
+  const activeColDirection = searchParams.get('orderColumn');
+
+  /* --------------------------- Searching for field -------------------------- */
   const activeField = searchedFields.find((queryObj) => queryObj.key === header.queryParam);
-
-  const [operation, setOperation] = useState(activeField?.operation ?? 'EQUALS');
-
-  const [query, setQuery] = useState<string>(activeField?.value ?? '');
-  const debounced = useDebounce(query, 500);
+  const [operation, setOperation] = useState(activeField ? activeField.operation : 'EQUALS');
+  const [query, setQuery] = useState<string>(activeField ? activeField.value : '');
 
   useEffect(() => {
+    if (!activeField) {
+      setQuery('');
+      setOperation('EQUALS');
+    }
+  }, [searchedFields.length]);
+
+  const debounced = useDebounce(query, 500);
+  const firstMount = useRef(true);
+
+  useEffect(() => {
+    if (firstMount.current) {
+      firstMount.current = false;
+      return;
+    }
+
     const newQuery = { key: header.queryParam, operation, value: debounced };
 
     const alreadyAdded = searchedFields.some(({ key }) => key === newQuery.key);
@@ -41,21 +61,37 @@ const TH = ({ data, header, addNewQuery, searchedFields }: Props) => {
 
     addNewQuery(items);
 
-    items.length ? searchParams.set('search', JSON.stringify(items)) : searchParams.delete('search');
+    searchParams.set('search', JSON.stringify(items.length ? items : []));
 
-    // setSearchParams(searchParams);
+    setSearchParams(searchParams);
   }, [debounced, operation]);
+
+  /* -------------------------- Uniqe values checkbox ------------------------- */
 
   const uniqueValues = useMemo(() => getUniqueValues(data.map((item) => item[header.queryParam as keyof typeof item])), []);
   const filteredUniqeValues = useMemo(() => uniqueValues.filter((item) => item.toString().includes(query)), [query]);
 
-  const [rename, setRename] = useState('');
+  /* ------------------------------ Rename Value ------------------------------ */
+
+  const [rename, setRename] = useState({ fieldValue: '', renameValue: '' });
+
+  const { toast } = useToast();
+  const { mutate: renameMutate, isPending: renameIsPending } = useMutation({
+    mutationFn: renameField,
+    onSuccess: (returnedDataFromMutation) => {
+      if (returnedDataFromMutation.data.code === 200) {
+        setRename({ fieldValue: '', renameValue: '' });
+        toast({ title: 'Field Renamed', description: 'Field has been renamed successfully! ✔' });
+      }
+    },
+  });
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    const data = { fieldName: header.queryParam, fieldValue: query, renameValue: rename };
-    console.log(data);
+    const data = { fieldName: header.queryParam, fieldValue: rename.fieldValue, renameValue: rename.renameValue };
+
+    renameMutate(data);
   }
 
   return (
@@ -67,13 +103,36 @@ const TH = ({ data, header, addNewQuery, searchedFields }: Props) => {
         <PopoverContent className="w-96 max-h-[500px] overflow-y-auto">
           <div className="grid gap-4">
             <div className="space-y-2">
-              <h4 className="font-medium leading-none">Dimensions</h4>
-              <p className="text-sm text-muted-foreground">Set the dimensions for the layer.</p>
+              <h4 className="font-medium leading-none">{header.label}</h4>
+              {/* <p className="text-sm text-muted-foreground">Set the dimensions for the layer.</p> */}
             </div>
             <div className="grid gap-2">
               <div className="flex items-center gap-4">
-                <button className="flex-1 bg-green-400">ASC</button>
-                <button className="flex-1 bg-red-400">DESC</button>
+                <button
+                  className={cn('flex-1 p-1 rounded-md text-white font-semibold  bg-sky-600 scale-90', {
+                    // 'opacity-50 scale-100 ': activeColDirection !== orderColumn && activeDirection !== 'ASC',
+                  })}
+                  onClick={() => {
+                    searchParams.set('orderDirection', 'ASC');
+                    searchParams.set('orderColumn', orderColumn.toString());
+
+                    setSearchParams(searchParams);
+                  }}
+                >
+                  ASC
+                </button>
+                <button
+                  className={cn('flex-1 p-1 rounded-md text-white font-semibold  bg-red-600 scale-90', {
+                    // 'opacity-50 scale-100 ': activeColDirection !== orderColumn && activeDirection !== 'DESC',
+                  })}
+                  onClick={() => {
+                    searchParams.set('orderDirection', 'DESC');
+                    searchParams.set('orderColumn', orderColumn.toString());
+                    setSearchParams(searchParams);
+                  }}
+                >
+                  DESC
+                </button>
               </div>
 
               <div className="grid grid-cols-3 gap-2">
@@ -82,14 +141,19 @@ const TH = ({ data, header, addNewQuery, searchedFields }: Props) => {
                     key={i}
                     disabled={!query}
                     onClick={() => setOperation(value)}
-                    className={cn('flex-1 bg-gray-400 disabled:opacity-50', { 'bg-green-400': value === operation })}
+                    className={cn(
+                      'flex-1 bg-gray-400 disabled:opacity-50 rounded-md py-1 font-semibold scale-90 transition-all duration-200',
+                      {
+                        'bg-green-400 scale-100': value === operation && query,
+                      }
+                    )}
                   >
                     {label}
                   </button>
                 ))}
               </div>
 
-              <div className="grid grid-cols-3 items-center gap-4">
+              <div className="flex items-center gap-4 border-b-2 my-2 border-black/10 pb-2">
                 <Label htmlFor="search">Search</Label>
                 <Input
                   id="search"
@@ -97,14 +161,33 @@ const TH = ({ data, header, addNewQuery, searchedFields }: Props) => {
                   onChange={(e) => {
                     setQuery(e.target.value);
                   }}
-                  className="col-span-2 h-8"
+                  className="h-8 flex-1"
                 />
               </div>
-              <form onSubmit={handleSubmit} className="flex items-center gap-4">
+
+              <form onSubmit={handleSubmit} className="space-y-2">
                 <Label htmlFor="rename">Rename</Label>
-                <Input value={rename} onChange={(e) => setRename(e.target.value)} id="rename" className="flex-1" />
-                <button className="bg-green-300">
-                  <Check />
+                <div className="space-y-2">
+                  <Input
+                    value={rename.fieldValue}
+                    onChange={(e) => setRename({ ...rename, fieldValue: e.target.value })}
+                    id="rename"
+                    className="flex-1"
+                    placeholder="Old Value"
+                  />
+                  <Input
+                    value={rename.renameValue}
+                    onChange={(e) => setRename({ ...rename, renameValue: e.target.value })}
+                    id="rename"
+                    className="flex-1"
+                    placeholder="New Value"
+                  />
+                </div>
+                <button
+                  disabled={!rename.fieldValue || !rename.renameValue || renameIsPending}
+                  className="bg-green-600 p-1 text-white rounded-md w-full disabled:opacity-50"
+                >
+                  {!renameIsPending ? 'Rename Field' : <Spinner />}
                 </button>
               </form>
 

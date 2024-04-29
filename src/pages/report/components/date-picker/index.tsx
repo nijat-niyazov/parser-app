@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 const currentDate = new Date();
+const monthAgo = subMonths(currentDate, 1);
 
 function DatePickerWithRange({ className }: React.HTMLAttributes<HTMLDivElement>) {
   const [searchParams, setSearchParams] = useSearchParams();
