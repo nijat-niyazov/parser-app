@@ -1,16 +1,16 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/components/ui/use-toast';
 
-import { FormulaType, addNewFields, deleteFields, getFormulaList, getReportData, updateFields } from '@/services/api/endpoints';
+import { addNewFields, getReportData, updateFields } from '@/services/api/endpoints';
 import { cn, generateParams } from '@/utils';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChangeEvent, useMemo, useState } from 'react';
+import { ChangeEvent, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
+import { headers } from '@/utils/constants/headers';
 import { NewField, TablePagination } from './components';
 import TableActions from './sections/table-actions';
 import TopSection from './sections/top-section';
-import { headers } from './static';
 
 import { defaultSearchParams } from '@/utils/constants/defaultSearchParam';
 import EmptyInfo from './components/empty-info';
@@ -39,11 +39,10 @@ const ReportPage = () => {
   /* ----------------------------- Add New Fields ----------------------------- */
   function handleChangeNewFields(e: ChangeEvent<HTMLInputElement>) {
     const newItems = handleChangeValues(e, newFields);
-
     setNewFields(newItems);
   }
 
-  function handleAddNewProduct() {
+  function handleAddNewField() {
     setNewFields((prev) => [...prev, { id: prev.length + 1 }]);
   }
 
@@ -52,7 +51,6 @@ const ReportPage = () => {
   }
 
   const queryClient = useQueryClient();
-
   const { mutate: addNewFieldsMutation, isPending: addingPending } = useMutation({
     mutationFn: addNewFields,
     onSuccess: (comingResFromMutFn) => {
@@ -81,10 +79,14 @@ const ReportPage = () => {
   const [selectedFields, setSelectedFields] = useState<PropertyType[]>([]);
 
   /* ------------------------------ Update Fields ----------------------------- */
-
   const [editMode, setEditMode] = useState<boolean>(false);
-  function toggleEditMode() {
-    setEditMode(!editMode);
+
+  function openEditMode() {
+    setEditMode(true);
+  }
+
+  function closeEditMode() {
+    setEditMode(false);
   }
 
   function handleChangeOldFields(e: ChangeEvent<HTMLInputElement>) {
@@ -105,38 +107,10 @@ const ReportPage = () => {
     },
   });
 
-  /* ------------------------------ Delete Fields ----------------------------- */
-
-  const { mutate: deleteFieldsMutation, isPending: deletePending } = useMutation({
-    mutationFn: () => deleteFields(selectedFields.map((item) => item.id) as number[]),
-    onSuccess: (comingResFromMutFn) => {
-      if (comingResFromMutFn.data.code === 200) {
-        toast({ title: `Changes implemented! ✔`, description: `Selected fields are deleted !` });
-        setSelectedFields([]);
-      }
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['repoData', searchParams.toString()] });
-    },
-  });
-
-  const [filteredKeys, setFilteredKeys] = useState<string[]>([]);
-
-  function addKeyToFilters(key: string) {
-    setFilteredKeys((prev) => [...prev, key]);
-  }
-
-  const filteredItems = useMemo(() => {}, [filteredKeys.join(',')]);
-
+  /* ----------------------------- Disabled States ---------------------------- */
   const deleteDisabled = !selectedFields.length;
   const savedDisabled = !selectedFields.length && !newFields.length;
   const saveMode = newFields.length > 0 ? 'save' : 'update';
-
-  function resetFilters() {
-    setSearchParams(defaultSearchParams);
-    setSearchedFields([]);
-    setNewFields([]);
-  }
 
   /* ------------------------------ Fetching Data ----------------------------- */
   const [searchParams, setSearchParams] = useSearchParams(defaultSearchParams);
@@ -144,6 +118,7 @@ const ReportPage = () => {
   const searchedItems = searchParams.has('search') ? JSON.parse(searchParams.get('search') as string) : [];
 
   const [searchedFields, setSearchedFields] = useState<SearchQuery[]>(searchedItems);
+
   const addNewQuery = (items: SearchQuery[]) => setSearchedFields(items);
 
   const params = generateParams(Object.fromEntries(searchParams.entries()));
@@ -154,23 +129,22 @@ const ReportPage = () => {
     placeholderData: keepPreviousData,
   });
 
-  const {
-    isPending: formulasIsPending,
-    error: formulasError,
-    data: formulasData,
-    refetch: refetchFormulas,
-  } = useQuery({
-    queryKey: ['formulas'],
-    queryFn: getFormulaList,
-  });
-
   const itemsLoading = isPending && isFetching;
 
-  if (itemsLoading || formulasIsPending) {
-    return <div className="flex-1 bg-red-400 flex items-center justify-center font-semibold text-3xl">Loading...</div>;
+  /* ----------------------------- Shown UI Items ----------------------------- */
+  const [filteredKeys, setFilteredKeys] = useState<{ paramName: string; value: string }[]>([]);
+
+  function addUIFilters(e: ChangeEvent<HTMLInputElement>) {
+    const { checked, name: paramName, value } = e.target;
+    const items = checked ? [...filteredKeys, { paramName, value }] : filteredKeys.filter((item) => item.value !== value);
+    setFilteredKeys(items);
   }
 
-  if (error || formulasError) {
+  if (itemsLoading) {
+    return <div className="flex-1 h-full bg-gray-300 flex items-center justify-center font-semibold text-4xl">Loading...</div>;
+  }
+
+  if (error) {
     console.log(error);
 
     return <div>Error</div>;
@@ -178,11 +152,14 @@ const ReportPage = () => {
 
   if (data) {
     const items = data.data.data as PropertyType[];
-    const formulas = formulasData.data.data as FormulaType[];
 
     /* ------------------------------ Select Items ------------------------------ */
     function onSelect(e: ChangeEvent<HTMLInputElement>, item?: PropertyType) {
       const { checked, id } = e.target;
+
+      if (!checked) {
+        setEditMode(false);
+      }
 
       const selectedOptions =
         id !== 'all'
@@ -198,26 +175,39 @@ const ReportPage = () => {
 
     const totalPages = Math.ceil(data.data.total / data.data.limit);
 
+    const filteredItems = items.filter((item) => filteredKeys.some(({ paramName, value }) => item[paramName] === value));
+
+    function resetStates() {
+      setSelectedFields([]);
+      setNewFields([]);
+    }
+
+    function resetFilters() {
+      setSearchParams(defaultSearchParams);
+      setSearchedFields([]);
+      resetStates();
+    }
+
     return (
       <div
-        className={cn('p-10  bg-slate-200 flex-1', {
+        className={cn('p-10  bg-slate-200 flex-1 h-full flex flex-col', {
           'opacity-20  pointer-events-none': (isPlaceholderData && isFetching) || addingPending,
         })}
       >
-        <TopSection formulas={formulas} />
+        <TopSection />
 
         <TableActions
-          disabledButtons={{ deleteDisabled, savedDisabled }}
-          handleAddField={handleAddNewProduct}
-          handleDelete={deleteFieldsMutation}
+          editMode={editMode}
+          handleAddField={handleAddNewField}
           handleSaveNewFields={saveNewProducts}
           handleUpdate={updateFieldsMutation}
           saveMode={saveMode}
-          formulas={formulas}
           selectedFieldsIds={selectedFields?.map((field) => field.id)}
-          setSelectedFields={setSelectedFields}
+          resetStates={resetStates}
           resetFilters={resetFilters}
-          toggleEditMode={toggleEditMode}
+          openEditMode={openEditMode}
+          closeEditMode={closeEditMode}
+          disabledButtons={{ deleteDisabled, savedDisabled }}
         />
 
         <Table>
@@ -229,13 +219,14 @@ const ReportPage = () => {
               </TableHead>
               {headers.map((header, i) => (
                 <TH
+                  data={items}
                   orderColumn={i + 1}
                   key={i}
                   searchedFields={searchedFields}
                   addNewQuery={addNewQuery}
-                  data={items}
                   header={header}
-                  handleFilter={addKeyToFilters}
+                  addUIFilters={addUIFilters}
+                  filteredKeys={filteredKeys}
                 />
               ))}
             </TableRow>
@@ -244,7 +235,7 @@ const ReportPage = () => {
           {/* ---------------------------------- Data ---------------------------------- */}
           <TableBody>
             {items.length > 0 ? (
-              items.map((listItem) => (
+              (filteredItems.length ? filteredItems : items).map((listItem) => (
                 <TableRow key={listItem.id}>
                   <TableCell className="font-medium overflow-hidden border-r-[0.5px] border-b-[0.5px] border-black">
                     <input
@@ -258,7 +249,7 @@ const ReportPage = () => {
                   </TableCell>
 
                   {headers.map(({ queryParam }, i) => {
-                    const isLink = queryParam.includes('link');
+                    const isLink = queryParam.toLowerCase().includes('link');
                     const content = listItem[queryParam] ?? '';
                     const selectedField = selectedFields.find((item) => item.id === listItem.id);
 
@@ -316,7 +307,7 @@ const ReportPage = () => {
         </Table>
 
         {/* ------------------------------- Pagination ------------------------------- */}
-        {totalPages != 0 && <TablePagination totalPages={totalPages} />}
+        {totalPages - 1 !== 0 && <TablePagination totalPages={totalPages} />}
       </div>
     );
   }

@@ -1,4 +1,5 @@
 import { Input } from '@/components/ui/input';
+import { generateLinks } from '@/services/api/endpoints';
 import { cn } from '@/utils';
 import { useMutation } from '@tanstack/react-query';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
@@ -6,24 +7,20 @@ import { ChangeEvent, FormEvent, useRef, useState } from 'react';
 import { Spinner } from '../report/sections/top-section/formulas';
 import ActionMessage from './ActionMessage';
 
-type Item = {
-  link: string;
-  id: number;
-};
+type Item = { link: string; id: number };
 
 const HomePage = () => {
   const [links, setLinks] = useState<Item[]>([]);
 
-  // const [success, setSuccess] = useState<boolean>(false);
   const [editItem, setEditItem] = useState<null | Item>(null);
 
-  const ref = useRef<HTMLInputElement>(null);
   const [link, setLink] = useState<string>(editItem?.link || '');
 
   function onChange(e: ChangeEvent<HTMLInputElement>) {
     setLink(e.target.value);
   }
 
+  const ref = useRef<HTMLInputElement>(null);
   function addLinkToList() {
     if (!editItem) {
       const newLink = { id: link.trim().length + 1, link };
@@ -41,38 +38,31 @@ const HomePage = () => {
   }
 
   const [showModal, setShowModal] = useState<boolean>(false);
+
   const { data, error, isPending, isSuccess, mutate, reset } = useMutation({
-    mutationFn: async (links: string[]) =>
-      await new Promise<{ status: number; data: { code: number; message: string } }>((resolve, reject) =>
-        // setTimeout(() => resolve({ status: 201, data: { code: 200, message: 'Links succesfully sent ✔' } }), 2000)
-        setTimeout(() => reject({ status: 400, data: { code: 400, message: 'Something went wrong ' } }), 2000)
-      ),
-    // generateLinks(links),
+    mutationFn: generateLinks,
     onSuccess: (comingData) => {
-      if (comingData.data.code === 200) {
+      if (comingData.data.data.code === 200) {
         setShowModal(true);
+        setLinks([]);
       }
     },
-    onError: (comingError) => {
-      console.log({ comingError });
 
-      // if (comingError?.data.code === 400) {
-      //   setShowModal(true);
-      // }
+    onError: (comingError) => {
+      if (comingError && comingError?.message) {
+        setShowModal(true);
+      }
     },
   });
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-
     const onlyLinks = links.map(({ link }) => link);
-
     mutate(onlyLinks);
   }
 
   function handleChange() {
     setShowModal(!showModal);
-    // setSuccess(true);
   }
 
   return (
@@ -92,7 +82,6 @@ const HomePage = () => {
           />
           <button
             disabled={!link.trim().length}
-            // onClick={!editItem ? addLinkToList : updateListItem}
             onClick={addLinkToList}
             type="button"
             className="p-2 bg-sky-600 rounded-md disabled:opacity-50"
