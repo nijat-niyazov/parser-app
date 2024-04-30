@@ -1,8 +1,4 @@
 export const headers = [
-  // {
-  //   label: 'ID',
-  //   queryParam: 'id',
-  // },
   {
     label: 'Article ID',
     queryParam: 'articleId',
@@ -18,6 +14,10 @@ export const headers = [
   {
     label: 'Product Title',
     queryParam: 'productTitle',
+  },
+  {
+    label: 'Formula Name',
+    queryParam: 'formulaName',
   },
   {
     label: 'Source Price',

@@ -1,3 +1,4 @@
+import { useToast } from '@/components/ui/use-toast';
 import { generateReports } from '@/services/api/endpoints';
 import { cn, formatDate, generateParams } from '@/utils';
 import { useQuery } from '@tanstack/react-query';
@@ -41,9 +42,12 @@ const DownloadFile = () => {
     enabled,
   });
 
+  const { toast } = useToast();
+
   function downloadFile() {
     if (error || data?.status === 500) {
-      return alert(data?.data.message);
+      toast({ title: 'Something went wrong', description: data?.data.message, variant: 'destructive' });
+      return;
     } else if (!error && data) {
       const {
         data: { data: file },

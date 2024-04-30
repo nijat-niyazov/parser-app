@@ -2,7 +2,7 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { Trash2 } from 'lucide-react';
 import React from 'react';
 import { PropertyType } from '../..';
-import { headers } from '../../static';
+import { headers } from '../../../../utils/constants/headers';
 
 type Props = {
   removeAddedField: (id: number) => void;

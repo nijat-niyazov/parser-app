@@ -1,36 +1,44 @@
-import { format, subMonths } from 'date-fns';
+import { format } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn, formatDate } from '@/utils';
+import { currentDate, defaultSearchParams, monthAgo } from '@/utils/constants/defaultSearchParam';
 import { CalendarDays } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-const currentDate = new Date();
-const monthAgo = subMonths(currentDate, 1);
-
 function DatePickerWithRange({ className }: React.HTMLAttributes<HTMLDivElement>) {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const from = searchParams.has('fromDate') ? new Date(searchParams.get('fromDate') as string) : subMonths(currentDate, 1);
-  const to = searchParams.has('toDate') ? new Date(searchParams.get('toDate') as string) : currentDate;
+  const [searchParams, setSearchParams] = useSearchParams(defaultSearchParams);
+  const from = new Date(searchParams.get('fromDate') as string);
+  const to = new Date(searchParams.get('toDate') as string);
 
-  const [date, setDate] = useState<DateRange | undefined>({ from, to });
+  const [date, setDate] = useState<DateRange>({ from, to });
 
+  /* ----------------------------- Changing Date ----------------------------- */
   function changeDate(newDate: DateRange | undefined) {
-    setDate(newDate);
+    if (newDate !== undefined) {
+      if (newDate?.from) searchParams.set('fromDate', formatDate(newDate.from));
+      if (newDate?.to) searchParams.set('toDate', formatDate(newDate.to));
 
-    if (newDate?.from) {
-      searchParams.set('fromDate', formatDate(newDate.from));
+      setSearchParams(searchParams);
+      setDate(newDate);
     }
-    if (newDate?.to) {
-      searchParams.set('toDate', formatDate(newDate.to));
-    }
-
-    setSearchParams(searchParams);
   }
+
+  /* ----------------------------- Resetting Date ----------------------------- */
+  const firstMount = useRef(true);
+  useEffect(() => {
+    if (firstMount.current) {
+      firstMount.current = false;
+      return;
+    }
+
+    const isDefaultDateState = formatDate(from) === formatDate(monthAgo) && formatDate(to) === formatDate(currentDate);
+    if (isDefaultDateState) changeDate({ from: monthAgo, to: currentDate });
+  }, [formatDate(from), formatDate(to)]);
 
   return (
     <div className={cn('grid gap-2 mr-auto', className)}>
