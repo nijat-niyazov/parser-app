@@ -74,6 +74,9 @@ const TableActions = ({
         resetStates();
       }
     },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['repoData', searchParams.toString()] });
+    },
   });
 
   const {
