@@ -22,10 +22,9 @@ type Props = {
   addNewQuery: (items: SearchQuery[]) => void;
   addUIFilters: (e: ChangeEvent<HTMLInputElement>) => void;
   filteredKeys: { paramName: string; value: string }[];
-  orderColumn: number;
 };
 
-const TH = ({ data, header, addNewQuery, searchedFields, orderColumn, addUIFilters, filteredKeys }: Props) => {
+const TH = ({ data, header, addNewQuery, searchedFields, addUIFilters, filteredKeys }: Props) => {
   const [searchParams, setSearchParams] = useSearchParams(defaultSearchParams);
 
   const activeDirection = searchParams.get('orderDirection');
@@ -95,6 +94,9 @@ const TH = ({ data, header, addNewQuery, searchedFields, orderColumn, addUIFilte
       if (returnedDataFromMutation.data.code === 200) {
         setRename({ fieldValue: '', renameValue: '' });
         toast({ title: 'Changes implemented ✔', description: 'Field has been renamed successfully! ' });
+      } else if ('error' in returnedDataFromMutation.data) {
+        const errorMessage = returnedDataFromMutation.data.error.message;
+        toast({ title: 'Something went wrong', description: errorMessage, variant: 'destructive' });
       }
     },
     onSettled: () => {
@@ -104,7 +106,11 @@ const TH = ({ data, header, addNewQuery, searchedFields, orderColumn, addUIFilte
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const data = { fieldName: header.queryParam, fieldValue: rename.fieldValue, renameValue: rename.renameValue };
+    const data = {
+      fieldName: header.queryParam,
+      fieldValue: rename.fieldValue,
+      renameValue: rename.renameValue,
+    };
 
     renameMutate(data);
   }
@@ -130,11 +136,11 @@ const TH = ({ data, header, addNewQuery, searchedFields, orderColumn, addUIFilte
               <div className="flex items-center gap-4">
                 <button
                   className={cn('flex-1 p-1 rounded-md text-white font-semibold  bg-sky-600 scale-90 opacity-50', {
-                    'opacity-100 scale-100 ': activeColDirection === orderColumn.toString() && activeDirection === 'ASC',
+                    'opacity-100 scale-100 ': activeColDirection === header.queryParam && activeDirection === 'ASC',
                   })}
                   onClick={() => {
                     searchParams.set('orderDirection', 'ASC');
-                    searchParams.set('orderColumn', orderColumn.toString());
+                    searchParams.set('orderColumn', header.queryParam);
 
                     setSearchParams(searchParams);
                   }}
@@ -143,11 +149,11 @@ const TH = ({ data, header, addNewQuery, searchedFields, orderColumn, addUIFilte
                 </button>
                 <button
                   className={cn('flex-1 p-1 rounded-md text-white font-semibold  bg-red-600 scale-90 opacity-50', {
-                    'opacity-100 scale-100 ': activeColDirection === orderColumn.toString() && activeDirection === 'DESC',
+                    'opacity-100 scale-100 ': activeColDirection === header.queryParam && activeDirection === 'DESC',
                   })}
                   onClick={() => {
                     searchParams.set('orderDirection', 'DESC');
-                    searchParams.set('orderColumn', orderColumn.toString());
+                    searchParams.set('orderColumn', header.queryParam);
                     setSearchParams(searchParams);
                   }}
                 >

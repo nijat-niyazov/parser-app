@@ -1,10 +1,11 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Check, ListRestart, Pencil, Plus, X } from 'lucide-react';
+import { Check, ListRestart, Pencil, Plus, SearchCheck, X } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
 import { AreYouSureModal } from '@/components';
 import { useToast } from '@/components/ui/use-toast';
 import { deleteFields, getFormulaList, setFormulaToField } from '@/services/api/endpoints';
+import { useGenerateReport } from '@/services/providers/Context';
 import { defaultSearchParams } from '@/utils/constants/defaultSearchParam';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -40,6 +41,8 @@ const TableActions = ({
   const [searchParams] = useSearchParams(defaultSearchParams);
   const { toast } = useToast();
 
+  const { setEnabled } = useGenerateReport();
+
   /* ------------------------------ Delete Field ------------------------------ */
   const queryClient = useQueryClient();
 
@@ -54,11 +57,41 @@ const TableActions = ({
       if (comingResFromMutFn.data.code === 200) {
         toast({ title: `Changes implemented! ✔`, description: `Selected fields are deleted !` });
         resetStates();
-        setShowDeleteModal(false);
+        setEnabled(false);
+      } else if ('error' in comingResFromMutFn.data) {
+        const errorMessage = comingResFromMutFn.data.error.message;
+        toast({ title: `Something went wrong`, description: errorMessage, variant: 'destructive' });
       }
+      setShowDeleteModal(false);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['repoData', searchParams.toString()] });
+      queryClient.invalidateQueries({ queryKey: ['reportsGenerate', searchParams.toString()] });
+    },
+  });
+
+  /* -------------------------- Check Stock of Field -------------------------- */
+
+  const { mutate: checkStockFieldsMutation, isPending: checkStockPending } = useMutation({
+    mutationFn: () => deleteFields(selectedFieldsIds as number[]),
+    // mutationFn: () => checkStocksOfFields(selectedFieldsIds as number[]),
+    onSuccess: (comingResFromMutFn) => {
+      if (comingResFromMutFn.data.code === 200) {
+        toast({
+          title: `Changes implemented! ✔`,
+          description: `Stocks  are checked for selected fields !`,
+        });
+        resetStates();
+        setEnabled(false);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['repoData', searchParams.toString()],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['reportsGenerate', searchParams.toString()],
+      });
     },
   });
 
@@ -66,27 +99,32 @@ const TableActions = ({
   const [selectedFormula, setSelectedFormula] = useState<string | null>(null);
 
   const { mutate: setFormula, isPending } = useMutation({
-    mutationFn: () => setFormulaToField({ productIds: selectedFieldsIds, formulaId: selectedFormula as string }),
+    mutationFn: () =>
+      setFormulaToField({
+        productIds: selectedFieldsIds,
+        formulaId: selectedFormula as string,
+      }),
     onSuccess: (comingRes) => {
       if (comingRes.data.code === 200) {
-        toast({ title: 'Changes implemented', description: 'Formula is set! ✔' });
+        toast({
+          title: 'Changes implemented',
+          description: 'Formula is set! ✔',
+        });
         setSelectedFormula(null);
         resetStates();
+        setEnabled(false);
+      } else if ('error' in comingRes.data) {
+        const errorMessage = comingRes.data.error.message;
+        toast({ title: `Something went wrong`, description: errorMessage, variant: 'destructive' });
       }
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['repoData', searchParams.toString()] });
+      queryClient.invalidateQueries({ queryKey: ['reportsGenerate', searchParams.toString()] });
     },
   });
 
-  const {
-    isPending: formulasPending,
-    error,
-    data,
-  } = useQuery({
-    queryKey: ['formulas'],
-    queryFn: getFormulaList,
-  });
+  const { isPending: formulasPending, error, data } = useQuery({ queryKey: ['formulas'], queryFn: getFormulaList });
 
   let formulaContent;
 
@@ -150,17 +188,26 @@ const TableActions = ({
         description="This changes will be unrecoverable."
       />
 
+      {/* ------------------------------- Check Stock ------------------------------ */}
+
+      <button
+        disabled={disabledButtons.savedDisabled || isPending || editMode}
+        className="bg-violet-600 p-2 rounded-md disabled:opacity-50"
+        onClick={() => {
+          checkStockFieldsMutation();
+          closeEditMode();
+        }}
+      >
+        <SearchCheck className="text-white " />
+      </button>
+
       {/* ------------------------------ Save Changes ------------------------------ */}
       <button
         onClick={() => {
           if (selectedFormula) {
             setFormula();
           } else {
-            if (saveMode === 'save') {
-              handleSaveNewFields();
-            } else {
-              handleUpdate();
-            }
+            saveMode === 'save' ? handleSaveNewFields() : handleUpdate();
             closeEditMode();
           }
         }}

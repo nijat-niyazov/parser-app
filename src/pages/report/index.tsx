@@ -12,6 +12,7 @@ import { NewField, TablePagination } from './components';
 import TableActions from './sections/table-actions';
 import TopSection from './sections/top-section';
 
+import { useGenerateReport } from '@/services/providers/Context';
 import { defaultSearchParams } from '@/utils/constants/defaultSearchParam';
 import EmptyInfo from './components/empty-info';
 import TH from './components/table-head';
@@ -36,6 +37,8 @@ const ReportPage = () => {
     return newItems;
   }
 
+  const { setEnabled } = useGenerateReport();
+
   /* ----------------------------- Add New Fields ----------------------------- */
   function handleChangeNewFields(e: ChangeEvent<HTMLInputElement>) {
     const newItems = handleChangeValues(e, newFields);
@@ -55,12 +58,18 @@ const ReportPage = () => {
     mutationFn: addNewFields,
     onSuccess: (comingResFromMutFn) => {
       if (comingResFromMutFn.status === 202) {
-        toast({ title: `Changes implemented! ✔`, description: `New fields are added !` });
+        toast({
+          title: `Changes implemented! ✔`,
+          description: `New fields are added !`,
+        });
         setNewFields([]);
+        setEnabled(false);
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['repoData', searchParams.toString()] });
+      queryClient.invalidateQueries({
+        queryKey: ['repoData', searchParams.toString()],
+      });
     },
   });
 
@@ -98,12 +107,24 @@ const ReportPage = () => {
     mutationFn: () => updateFields(selectedFields),
     onSuccess: (comingResFromMutFn) => {
       if (comingResFromMutFn.data.code === 200) {
-        toast({ title: `Changes implemented! ✔`, description: `Selected fields got updated !` });
+        toast({
+          title: `Changes implemented! ✔`,
+          description: `Selected fields got updated !`,
+        });
+        setEnabled(false);
+
         setSelectedFields([]);
+      } else {
+        toast({
+          title: `Changes not implemented! ❌`,
+          description: comingResFromMutFn.data.message,
+        });
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['repoData', searchParams.toString()] });
+      queryClient.invalidateQueries({
+        queryKey: ['repoData', searchParams.toString()],
+      });
     },
   });
 
@@ -215,12 +236,19 @@ const ReportPage = () => {
           <TableHeader>
             <TableRow>
               <TableHead className="border-r-[0.5px] border-b-[0.5px] border-black">
-                <input name="all" id="all" value="all" onChange={onSelect} type="checkbox" className="w-5 h-5 " />
+                <input
+                  name="all"
+                  id="all"
+                  value="all"
+                  onChange={onSelect}
+                  type="checkbox"
+                  className="w-5 h-5"
+                  checked={selectedFields.length === items.length}
+                />
               </TableHead>
               {headers.map((header, i) => (
                 <TH
                   data={items}
-                  orderColumn={i + 1}
                   key={i}
                   searchedFields={searchedFields}
                   addNewQuery={addNewQuery}
@@ -265,7 +293,7 @@ const ReportPage = () => {
                         {isEditMode ? (
                           <input
                             type="text"
-                            className="p-2 rounded-md border-2 broder-black"
+                            className="p-2 rounded-md border-2 border-black/30 w-full"
                             id={listItem.id?.toString()}
                             name={queryParam}
                             value={selectedField[queryParam] ?? ''}

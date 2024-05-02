@@ -1,36 +1,28 @@
 import { useToast } from '@/components/ui/use-toast';
 import { generateReports } from '@/services/api/endpoints';
-import { cn, formatDate, generateParams } from '@/utils';
+import { useGenerateReport } from '@/services/providers/Context';
+import { cn, generateParams } from '@/utils';
+import { defaultSearchParams } from '@/utils/constants/defaultSearchParam';
 import { useQuery } from '@tanstack/react-query';
 import { subMonths } from 'date-fns';
 import { Download } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Spinner } from '../formulas';
 
 const currentDate = new Date();
 const monthAgo = subMonths(currentDate, 1);
 
-const defaultParams = {
-  search: '[]',
-  offset: '0',
-  limit: '10',
-  orderColumn: '3',
-  orderDirection: 'DESC',
-  timezone: '+04:00',
-  fromDate: formatDate(monthAgo),
-  toDate: formatDate(currentDate),
-};
-
 export type PropertyType = { [key: string]: string | number };
 
 export type SearchQuery = { key: string; operation: string; value: string };
 
 const DownloadFile = () => {
-  const [searchParams, setSearchParams] = useSearchParams(defaultParams);
+  const [searchParams, setSearchParams] = useSearchParams(defaultSearchParams);
 
   const params = generateParams(Object.fromEntries(searchParams.entries()));
-  const [enabled, setEnabled] = useState(false);
+  // const [enabled, setEnabled] = useState(false);
+  const { enabled, setEnabled } = useGenerateReport();
 
   useEffect(() => {
     setEnabled(false);
@@ -45,13 +37,8 @@ const DownloadFile = () => {
   const { toast } = useToast();
 
   function downloadFile() {
-    if (error || data?.status === 500) {
-      toast({ title: 'Something went wrong', description: data?.data.message, variant: 'destructive' });
-      return;
-    } else if (!error && data) {
-      const {
-        data: { data: file },
-      } = data;
+    if (data?.status === 200) {
+      const { data: file } = data;
 
       const filename = 'Report.xlsx';
       const b64string = file;
@@ -63,6 +50,10 @@ const DownloadFile = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+    } else if (data?.data && 'error' in data?.data) {
+      const errorMessage = data?.data.error.message;
+      toast({ title: 'Something went wrong', description: errorMessage, variant: 'destructive' });
+      return;
     }
   }
 

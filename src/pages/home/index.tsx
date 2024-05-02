@@ -7,14 +7,13 @@ import { ChangeEvent, FormEvent, useRef, useState } from 'react';
 import { Spinner } from '../report/sections/top-section/formulas';
 import ActionMessage from './ActionMessage';
 
-type Item = { link: string; id: number };
+type Item = { link: string; id: string };
 
 const HomePage = () => {
   const [links, setLinks] = useState<Item[]>([]);
-
   const [editItem, setEditItem] = useState<null | Item>(null);
-
-  const [link, setLink] = useState<string>(editItem?.link || '');
+  const [link, setLink] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   function onChange(e: ChangeEvent<HTMLInputElement>) {
     setLink(e.target.value);
@@ -23,7 +22,7 @@ const HomePage = () => {
   const ref = useRef<HTMLInputElement>(null);
   function addLinkToList() {
     if (!editItem) {
-      const newLink = { id: link.trim().length + 1, link };
+      const newLink = { id: new Date().toISOString(), link };
       setLinks((prev) => [...prev, newLink]);
     } else {
       setLinks((prev) => prev.map((item) => (item.id === editItem.id ? { ...item, link } : item)));
@@ -33,7 +32,7 @@ const HomePage = () => {
     ref.current?.focus();
   }
 
-  function removeFromList(id: number) {
+  function removeFromList(id: string) {
     setLinks((prev) => prev.filter((link) => link.id !== id));
   }
 
@@ -42,16 +41,18 @@ const HomePage = () => {
   const { data, error, isPending, isSuccess, mutate, reset } = useMutation({
     mutationFn: generateLinks,
     onSuccess: (comingData) => {
-      if (comingData.data.data.code === 200) {
-        setShowModal(true);
+      console.log(comingData);
+
+      if (comingData.status === 200) {
         setLinks([]);
+      } else if ('error' in comingData.data) {
+        setErrorMessage(comingData.data.error.message);
       }
+      setShowModal(true);
     },
 
     onError: (comingError) => {
-      if (comingError && comingError?.message) {
-        setShowModal(true);
-      }
+      console.log(comingError);
     },
   });
 
@@ -63,11 +64,12 @@ const HomePage = () => {
 
   function handleChange() {
     setShowModal(!showModal);
+    setErrorMessage('');
   }
 
   return (
     <div className="bg-main h-full">
-      <ActionMessage handleChange={handleChange} success={isSuccess} showModal={showModal} />
+      <ActionMessage errMessage={errorMessage} handleChange={handleChange} success={data?.status === 200} showModal={showModal} />
 
       <div className="max-w-[700px] mx-auto z-10">
         <form onSubmit={onSubmit} className="flex items-center justify-center gap-2 py-10 ">
@@ -109,7 +111,14 @@ const HomePage = () => {
               <button className="bg-red-600 hover:bg-red-800 rounded-md p-1" onClick={() => removeFromList(id)}>
                 <Trash2 className="text-white" />
               </button>
-              <button className="bg-lime-600 hover:bg-lime-800 rounded-md p-1" onClick={() => setEditItem({ link, id })}>
+              <button
+                className="bg-lime-600 hover:bg-lime-800 rounded-md p-1"
+                onClick={() => {
+                  setEditItem({ link, id });
+
+                  setLink(link);
+                }}
+              >
                 <Pencil className="text-white" />
               </button>
             </li>
