@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 
 import { AreYouSureModal } from '@/components';
 import { useToast } from '@/components/ui/use-toast';
-import { deleteFields, getFormulaList, setFormulaToField } from '@/services/api/endpoints';
+import { checkStocksOfFields, deleteFields, getFormulaList, setFormulaToField } from '@/services/api/endpoints';
 import { useGenerateReport } from '@/services/providers/Context';
 import { defaultSearchParams } from '@/utils/constants/defaultSearchParam';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -54,11 +54,11 @@ const TableActions = ({
   const { mutate: deleteFieldsMutation, isPending: deletePending } = useMutation({
     mutationFn: () => deleteFields(selectedFieldsIds as number[]),
     onSuccess: (comingResFromMutFn) => {
-      if (comingResFromMutFn.data.code === 200) {
+      if (comingResFromMutFn.status === 200) {
         toast({ title: `Changes implemented! ✔`, description: `Selected fields are deleted !` });
         resetStates();
         setEnabled(false);
-      } else if ('error' in comingResFromMutFn.data) {
+      } else {
         const errorMessage = comingResFromMutFn.data.error.message;
         toast({ title: `Something went wrong`, description: errorMessage, variant: 'destructive' });
       }
@@ -73,10 +73,10 @@ const TableActions = ({
   /* -------------------------- Check Stock of Field -------------------------- */
 
   const { mutate: checkStockFieldsMutation, isPending: checkStockPending } = useMutation({
-    mutationFn: () => deleteFields(selectedFieldsIds as number[]),
-    // mutationFn: () => checkStocksOfFields(selectedFieldsIds as number[]),
+    mutationFn: () => checkStocksOfFields(selectedFieldsIds as number[]),
+
     onSuccess: (comingResFromMutFn) => {
-      if (comingResFromMutFn.data.code === 200) {
+      if (comingResFromMutFn.status === 200) {
         toast({
           title: `Changes implemented! ✔`,
           description: `Stocks  are checked for selected fields !`,
@@ -86,12 +86,8 @@ const TableActions = ({
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['repoData', searchParams.toString()],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['reportsGenerate', searchParams.toString()],
-      });
+      queryClient.invalidateQueries({ queryKey: ['repoData', searchParams.toString()] });
+      queryClient.invalidateQueries({ queryKey: ['reportsGenerate', searchParams.toString()] });
     },
   });
 
@@ -105,7 +101,7 @@ const TableActions = ({
         formulaId: selectedFormula as string,
       }),
     onSuccess: (comingRes) => {
-      if (comingRes.data.code === 200) {
+      if (comingRes.status === 200) {
         toast({
           title: 'Changes implemented',
           description: 'Formula is set! ✔',
@@ -113,7 +109,7 @@ const TableActions = ({
         setSelectedFormula(null);
         resetStates();
         setEnabled(false);
-      } else if ('error' in comingRes.data) {
+      } else {
         const errorMessage = comingRes.data.error.message;
         toast({ title: `Something went wrong`, description: errorMessage, variant: 'destructive' });
       }
@@ -191,7 +187,7 @@ const TableActions = ({
       {/* ------------------------------- Check Stock ------------------------------ */}
 
       <button
-        disabled={disabledButtons.savedDisabled || isPending || editMode}
+        disabled={disabledButtons.savedDisabled || disabledButtons.deleteDisabled || isPending || editMode}
         className="bg-violet-600 p-2 rounded-md disabled:opacity-50"
         onClick={() => {
           checkStockFieldsMutation();

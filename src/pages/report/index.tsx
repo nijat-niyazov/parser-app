@@ -58,18 +58,13 @@ const ReportPage = () => {
     mutationFn: addNewFields,
     onSuccess: (comingResFromMutFn) => {
       if (comingResFromMutFn.status === 202) {
-        toast({
-          title: `Changes implemented! ✔`,
-          description: `New fields are added !`,
-        });
+        toast({ title: `Changes implemented! ✔`, description: `New fields are added !` });
         setNewFields([]);
         setEnabled(false);
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['repoData', searchParams.toString()],
-      });
+      queryClient.invalidateQueries({ queryKey: ['repoData', searchParams.toString()] });
     },
   });
 
@@ -106,7 +101,7 @@ const ReportPage = () => {
   const { mutate: updateFieldsMutation, isPending: updatePending } = useMutation({
     mutationFn: () => updateFields(selectedFields),
     onSuccess: (comingResFromMutFn) => {
-      if (comingResFromMutFn.data.code === 200) {
+      if (comingResFromMutFn.status === 200) {
         toast({
           title: `Changes implemented! ✔`,
           description: `Selected fields got updated !`,
@@ -115,10 +110,8 @@ const ReportPage = () => {
 
         setSelectedFields([]);
       } else {
-        toast({
-          title: `Changes not implemented! ❌`,
-          description: comingResFromMutFn.data.message,
-        });
+        const detail = comingResFromMutFn.data.error.message;
+        toast({ title: `Changes not implemented! ❌`, description: detail });
       }
     },
     onSettled: () => {
@@ -171,8 +164,8 @@ const ReportPage = () => {
     return <div>Error</div>;
   }
 
-  if (data) {
-    const items = data.data.data as PropertyType[];
+  if (data?.status === 200) {
+    const items = data.data.data;
 
     /* ------------------------------ Select Items ------------------------------ */
     function onSelect(e: ChangeEvent<HTMLInputElement>, item?: PropertyType) {

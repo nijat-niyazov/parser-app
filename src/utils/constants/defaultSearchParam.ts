@@ -8,9 +8,8 @@ export const defaultSearchParams = {
   search: '[]',
   offset: '0',
   limit: '10',
-  orderColumn: '1',
+  orderColumn: 'articleId',
   orderDirection: 'DESC',
-  // timezone: '+04:00',
   fromDate: formatDate(monthAgo),
   toDate: formatDate(currentDate),
 };

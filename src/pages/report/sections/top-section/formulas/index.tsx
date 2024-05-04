@@ -53,12 +53,12 @@ const Formulas = () => {
 
       return prevFormulaData; //? we need have a previous version of data if something goes wrong or if we need to rollback
     },
-    onSuccess: (successResponseFromMutationFnReq, payload, prevFormulaData) => {
-      if (successResponseFromMutationFnReq.data.code === 200) {
+    onSuccess: (comingResFromMutationFnReq, payload, prevFormulaData) => {
+      if (comingResFromMutationFnReq.status === 200) {
         setFormula(initialSate);
         toast({ title: 'Changes Implemented', description: `Formula has been ${isEditMode ? 'edited' : 'added'}` });
       } else {
-        toast({ title: 'Something went wrong', description: successResponseFromMutationFnReq.data.message });
+        toast({ title: 'Something went wrong', description: comingResFromMutationFnReq.data.error.message });
       }
     },
     onError: (error, payload, prevFormulaData) => {
@@ -102,10 +102,10 @@ const Formulas = () => {
       return prevFormulaData;
     },
     onSuccess: (successResponseFromMutationFnReq, payload, prevFormulaData) => {
-      if (successResponseFromMutationFnReq.data.code !== 200) {
-        toast({ title: 'Something went wrong', description: successResponseFromMutationFnReq.data.message });
-      } else {
+      if (successResponseFromMutationFnReq.status === 200) {
         toast({ title: 'Changes implemented', description: 'Formula is deleted' });
+      } else {
+        toast({ title: 'Something went wrong', description: successResponseFromMutationFnReq.data.error.message });
       }
     },
     onError: (error, payload, prevFormulaData) => {
@@ -121,7 +121,7 @@ const Formulas = () => {
     formulaContent = <p>Loading...</p>;
   } else if (error) {
     formulaContent = <p>Error while loading</p>;
-  } else if (data) {
+  } else if (data.status === 200) {
     const formulas = data.data.data;
 
     formulaContent = (

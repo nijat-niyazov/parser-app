@@ -41,13 +41,7 @@ const HomePage = () => {
   const { data, error, isPending, isSuccess, mutate, reset } = useMutation({
     mutationFn: generateLinks,
     onSuccess: (comingData) => {
-      console.log(comingData);
-
-      if (comingData.status === 200) {
-        setLinks([]);
-      } else if ('error' in comingData.data) {
-        setErrorMessage(comingData.data.error.message);
-      }
+      comingData.status === 200 ? setLinks([]) : setErrorMessage(comingData.data.error.message);
       setShowModal(true);
     },
 

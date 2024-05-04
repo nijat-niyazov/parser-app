@@ -91,10 +91,10 @@ const TH = ({ data, header, addNewQuery, searchedFields, addUIFilters, filteredK
   const { mutate: renameMutate, isPending: renameIsPending } = useMutation({
     mutationFn: renameField,
     onSuccess: (returnedDataFromMutation) => {
-      if (returnedDataFromMutation.data.code === 200) {
+      if (returnedDataFromMutation.status === 200) {
         setRename({ fieldValue: '', renameValue: '' });
         toast({ title: 'Changes implemented ✔', description: 'Field has been renamed successfully! ' });
-      } else if ('error' in returnedDataFromMutation.data) {
+      } else {
         const errorMessage = returnedDataFromMutation.data.error.message;
         toast({ title: 'Something went wrong', description: errorMessage, variant: 'destructive' });
       }
